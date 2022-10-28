@@ -381,12 +381,39 @@ div.tocify {
 <h1><span class="header-section-number">2</span> Landings</h1>
 <div id="ziff" class="section level2" number="2.1">
 <h2><span class="header-section-number">2.1</span> ZIFF</h2>
+<pre class="r"><code>sp_code &lt;- find.species(my.species,&#39;ziff&#39;)
+kable(sp_code) </code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="right">x</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Mackerel bait (fishing licence only)</td>
+<td align="right">248</td>
+</tr>
+<tr class="even">
+<td align="left">Mackerel commercial (fishing licence)</td>
+<td align="right">249</td>
+</tr>
+<tr class="odd">
+<td align="left">Mackerel</td>
+<td align="right">250</td>
+</tr>
+<tr class="even">
+<td align="left">Exploratory mackerel (fishing licence)</td>
+<td align="right">951</td>
+</tr>
+<tr class="odd">
+<td align="left">Mackerel head</td>
+<td align="right">960</td>
+</tr>
+</tbody>
+</table>
 <pre class="r"><code>ziffR &lt;- paste0(dir.rdat, &quot;ziff.Rdata&quot;)
-sp_code &lt;- find.species(my.species,&#39;ziff&#39;);sp_code
-##   Mackerel bait (fishing licence only)  Mackerel commercial (fishing licence)                               Mackerel 
-##                                    248                                    249                                    250 
-## Exploratory mackerel (fishing licence)                          Mackerel head 
-##                                    951                                    960
 
 if(!file.exists(ziffR)){
     ziff &lt;- read.ziff(sp_code,path=dir.ziff,year=my.year,language=&#39;en&#39;)
@@ -404,6 +431,7 @@ if(!file.exists(ziffR)){
 CHECKS</h3>
 <div id="areas" class="section level4" number="2.1.1.1">
 <h4><span class="header-section-number">2.1.1.1</span> areas</h4>
+<p>Nafo 5Y and 5Ze are partially in the US.</p>
 <pre class="r"><code># NAFO 5 = landings in Canadian EEZ (northern contingent)
 kable(with(ziff, table(nafo,month)))     </code></pre>
 <table>
@@ -685,6 +713,7 @@ kable(with(ziff, table(nafo,month)))     </code></pre>
 </div>
 <div id="na-weights" class="section level4" number="2.1.1.2">
 <h4><span class="header-section-number">2.1.1.2</span> NA weights</h4>
+<p>How many NA weights are there?</p>
 <pre class="r"><code>na &lt;- cbind(all=with(ziff,table(year,useNA = &#39;always&#39;)),
                 na=with(ziff[is.na(ziff$catch),],table(year,useNA = &#39;always&#39;)))
 kable(na)</code></pre>
@@ -892,27 +921,28 @@ kable(na)</code></pre>
 </div>
 <div id="weights" class="section level4" number="2.1.1.3">
 <h4><span class="header-section-number">2.1.1.3</span> 0 weights</h4>
+<p>How many 0 weights are there?</p>
 <pre class="r"><code>with(ziff[!is.na(ziff$catch) &amp; ziff$catch==0,],table(year))
 ## &lt; table of extent 0 &gt;</code></pre>
 </div>
 <div id="jan-1" class="section level4" number="2.1.1.4">
 <h4><span class="header-section-number">2.1.1.4</span> Jan-1</h4>
 <p>Check that there is no abnormal quantity of landings on January first
-(possibly NA)</p>
+(possibly records for which data is unknown).</p>
 <pre class="r"><code>ggplot(ziff,aes(x=lubridate::yday(capt.date)))+geom_histogram(binwidth = 1)+
     scale_x_continuous(expand=c(0,0))+
     scale_y_continuous(expand=c(0,0))
 ## Warning: Removed 189026 rows containing non-finite values (stat_bin).</code></pre>
-<p><img src="1.0_read_files/figure-html/ZIFF_jan1-1.png" width="864" style="display: block; margin: auto;" />
-#### NPBC There are 3 special nbpc numbers that indicate landings that
-are not necessarily daily (e.g., monthly totals) or for which the data
-is only approximate. For instance, B00000 landings seems to be on the
-first of last of a certain month. For analyses of daily landings these
-might need to be excluded.</p>
-<pre class="r"><code>kable(cbind(with(ziff[ziff$npbc %in% c(&#39;000000&#39;, &#39;B00000&#39;, &#39;190000&#39;),], table(year,npbc)),
-            total=with(ziff, tapply(npbc, year, length))))  
-## Warning in cbind(with(ziff[ziff$npbc %in% c(&quot;000000&quot;, &quot;B00000&quot;, &quot;190000&quot;), : number of rows of result is not a multiple of vector length
-## (arg 2)</code></pre>
+<p><img src="1.0_read_files/figure-html/ZIFF_jan1-1.png" width="864" style="display: block; margin: auto;" /></p>
+</div>
+<div id="npbc" class="section level4" number="2.1.1.5">
+<h4><span class="header-section-number">2.1.1.5</span> NPBC</h4>
+<p>There are 3 special nbpc numbers that indicate landings that are not
+necessarily daily (e.g., monthly totals) or for which the data is only
+approximate. For instance, B00000 landings seems to be on the first of
+last of a certain month. For analyses of daily landings these might need
+to be excluded.</p>
+<pre class="r"><code>kable(with(ziff[ziff$npbc %in% c(&#39;000000&#39;, &#39;B00000&#39;, &#39;190000&#39;),], table(year,npbc)))  </code></pre>
 <table>
 <thead>
 <tr class="header">
@@ -920,7 +950,6 @@ might need to be excluded.</p>
 <th align="right">000000</th>
 <th align="right">190000</th>
 <th align="right">B00000</th>
-<th align="right">total</th>
 </tr>
 </thead>
 <tbody>
@@ -929,245 +958,210 @@ might need to be excluded.</p>
 <td align="right">1371</td>
 <td align="right">224</td>
 <td align="right">523</td>
-<td align="right">14767</td>
 </tr>
 <tr class="even">
 <td align="left">1986</td>
 <td align="right">851</td>
 <td align="right">207</td>
 <td align="right">1266</td>
-<td align="right">12769</td>
 </tr>
 <tr class="odd">
 <td align="left">1987</td>
 <td align="right">934</td>
 <td align="right">195</td>
 <td align="right">1214</td>
-<td align="right">14234</td>
 </tr>
 <tr class="even">
 <td align="left">1988</td>
 <td align="right">785</td>
 <td align="right">111</td>
 <td align="right">849</td>
-<td align="right">9872</td>
 </tr>
 <tr class="odd">
 <td align="left">1989</td>
 <td align="right">685</td>
 <td align="right">184</td>
 <td align="right">953</td>
-<td align="right">7392</td>
 </tr>
 <tr class="even">
 <td align="left">1990</td>
 <td align="right">752</td>
 <td align="right">224</td>
 <td align="right">743</td>
-<td align="right">9654</td>
 </tr>
 <tr class="odd">
 <td align="left">1991</td>
 <td align="right">719</td>
 <td align="right">97</td>
 <td align="right">748</td>
-<td align="right">10577</td>
 </tr>
 <tr class="even">
 <td align="left">1992</td>
 <td align="right">567</td>
 <td align="right">127</td>
 <td align="right">764</td>
-<td align="right">8498</td>
 </tr>
 <tr class="odd">
 <td align="left">1993</td>
 <td align="right">463</td>
 <td align="right">99</td>
 <td align="right">800</td>
-<td align="right">10246</td>
 </tr>
 <tr class="even">
 <td align="left">1994</td>
 <td align="right">589</td>
 <td align="right">136</td>
 <td align="right">1020</td>
-<td align="right">9993</td>
 </tr>
 <tr class="odd">
 <td align="left">1995</td>
 <td align="right">514</td>
 <td align="right">98</td>
 <td align="right">920</td>
-<td align="right">10199</td>
 </tr>
 <tr class="even">
 <td align="left">1996</td>
 <td align="right">334</td>
 <td align="right">190</td>
 <td align="right">398</td>
-<td align="right">12636</td>
 </tr>
 <tr class="odd">
 <td align="left">1997</td>
 <td align="right">131</td>
 <td align="right">229</td>
 <td align="right">598</td>
-<td align="right">11238</td>
 </tr>
 <tr class="even">
 <td align="left">1998</td>
 <td align="right">13</td>
 <td align="right">0</td>
 <td align="right">359</td>
-<td align="right">11051</td>
 </tr>
 <tr class="odd">
 <td align="left">1999</td>
 <td align="right">8</td>
 <td align="right">0</td>
 <td align="right">413</td>
-<td align="right">9107</td>
 </tr>
 <tr class="even">
 <td align="left">2000</td>
 <td align="right">22</td>
 <td align="right">7</td>
 <td align="right">8</td>
-<td align="right">10137</td>
 </tr>
 <tr class="odd">
 <td align="left">2001</td>
 <td align="right">16</td>
 <td align="right">7</td>
 <td align="right">654</td>
-<td align="right">7466</td>
 </tr>
 <tr class="even">
 <td align="left">2002</td>
 <td align="right">19</td>
 <td align="right">6</td>
 <td align="right">256</td>
-<td align="right">8935</td>
 </tr>
 <tr class="odd">
 <td align="left">2003</td>
 <td align="right">462</td>
 <td align="right">7</td>
 <td align="right">0</td>
-<td align="right">12322</td>
 </tr>
 <tr class="even">
 <td align="left">2004</td>
 <td align="right">454</td>
 <td align="right">7</td>
 <td align="right">0</td>
-<td align="right">12760</td>
 </tr>
 <tr class="odd">
 <td align="left">2005</td>
 <td align="right">201</td>
 <td align="right">7</td>
 <td align="right">0</td>
-<td align="right">20695</td>
 </tr>
 <tr class="even">
 <td align="left">2006</td>
 <td align="right">838</td>
 <td align="right">0</td>
 <td align="right">0</td>
-<td align="right">14757</td>
 </tr>
 <tr class="odd">
 <td align="left">2007</td>
 <td align="right">371</td>
 <td align="right">7</td>
 <td align="right">0</td>
-<td align="right">9453</td>
 </tr>
 <tr class="even">
 <td align="left">2008</td>
 <td align="right">1011</td>
 <td align="right">8</td>
 <td align="right">0</td>
-<td align="right">6601</td>
 </tr>
 <tr class="odd">
 <td align="left">2009</td>
 <td align="right">1171</td>
 <td align="right">8</td>
 <td align="right">0</td>
-<td align="right">8323</td>
 </tr>
 <tr class="even">
 <td align="left">2010</td>
 <td align="right">0</td>
 <td align="right">8</td>
 <td align="right">0</td>
-<td align="right">9570</td>
 </tr>
 <tr class="odd">
 <td align="left">2011</td>
 <td align="right">0</td>
 <td align="right">8</td>
 <td align="right">0</td>
-<td align="right">7094</td>
 </tr>
 <tr class="even">
 <td align="left">2012</td>
 <td align="right">0</td>
 <td align="right">8</td>
 <td align="right">0</td>
-<td align="right">5866</td>
 </tr>
 <tr class="odd">
 <td align="left">2013</td>
 <td align="right">0</td>
 <td align="right">8</td>
 <td align="right">0</td>
-<td align="right">4999</td>
 </tr>
 <tr class="even">
 <td align="left">2014</td>
 <td align="right">0</td>
 <td align="right">8</td>
 <td align="right">0</td>
-<td align="right">4465</td>
 </tr>
 <tr class="odd">
 <td align="left">2015</td>
 <td align="right">0</td>
 <td align="right">8</td>
 <td align="right">0</td>
-<td align="right">4772</td>
 </tr>
 <tr class="even">
 <td align="left">2016</td>
 <td align="right">0</td>
 <td align="right">8</td>
 <td align="right">0</td>
-<td align="right">6819</td>
 </tr>
 <tr class="odd">
 <td align="left">2017</td>
 <td align="right">0</td>
 <td align="right">8</td>
 <td align="right">0</td>
-<td align="right">11416</td>
 </tr>
 <tr class="even">
 <td align="left">2018</td>
 <td align="right">0</td>
 <td align="right">8</td>
 <td align="right">0</td>
-<td align="right">8590</td>
 </tr>
 <tr class="odd">
 <td align="left">2019</td>
 <td align="right">0</td>
 <td align="right">8</td>
 <td align="right">0</td>
-<td align="right">8045</td>
 </tr>
 </tbody>
 </table>
@@ -1219,7 +1213,7 @@ if(!all(file.exists(c(nafoAR,nafoBR)))){
 <div id="check" class="section level3 tabset" number="2.2.1">
 <h3 class="tabset"><span class="header-section-number">2.2.1</span>
 CHECK</h3>
-<p>Nafo B is used for landings prior 1995.</p>
+<p>Nafo B is used for landings prior to 1995.</p>
 <div id="compare" class="section level4" number="2.2.1.1">
 <h4><span class="header-section-number">2.2.1.1</span> compare</h4>
 <pre class="r"><code>ggplot()+

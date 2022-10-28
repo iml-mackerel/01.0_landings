@@ -16,7 +16,7 @@ output:
 ```{r markdown, echo=F}
 library(knitr)
 opts_chunk$set(echo = T, collapse = T, fig.align = "center", fig.width = 9, fig.height = 6)
-options(width = 140)
+options(width = 200)
 ```    
 
 ```{r settings, message = F}
@@ -25,10 +25,13 @@ source('0.0_settings.R')
 
 # Landings
 ## ZIFF
+```{r ziffsp, message = F}
+sp_code <- find.species(my.species,'ziff')
+kable(sp_code) 
+```
 
 ```{r ziff, message = F}
 ziffR <- paste0(dir.rdat, "ziff.Rdata")
-sp_code <- find.species(my.species,'ziff');sp_code
 
 if(!file.exists(ziffR)){
     ziff <- read.ziff(sp_code,path=dir.ziff,year=my.year,language='en')
@@ -44,35 +47,41 @@ if(!file.exists(ziffR)){
 
 ```
 ### CHECKS {.tabset}
+
 #### areas
+Nafo 5Y and 5Ze are partially in the US.
 ```{r ziff areas}
 # NAFO 5 = landings in Canadian EEZ (northern contingent)
 kable(with(ziff, table(nafo,month)))     
 ```
+
 #### NA weights
+How many NA weights are there?
 ```{r ziff nas}
 na <- cbind(all=with(ziff,table(year,useNA = 'always')),
                 na=with(ziff[is.na(ziff$catch),],table(year,useNA = 'always')))
 kable(na)
 ```
+
 #### 0 weights
+How many 0 weights are there?
 ```{r ziff zeros}
 with(ziff[!is.na(ziff$catch) & ziff$catch==0,],table(year))
 ```
+
 #### Jan-1
-Check that there is no abnormal quantity of landings on January first (possibly NA)
+Check that there is no abnormal quantity of landings on January first (possibly records for which data is unknown).
 ```{r ZIFF_jan1}
 ggplot(ziff,aes(x=lubridate::yday(capt.date)))+geom_histogram(binwidth = 1)+
     scale_x_continuous(expand=c(0,0))+
     scale_y_continuous(expand=c(0,0))
 ```
+
 #### NPBC
 There are 3 special nbpc numbers that indicate landings that are not necessarily daily (e.g., monthly totals) or for which the data is only approximate. For instance, B00000 landings seems to be on the first of last of a certain month. For analyses of daily landings these might need to be excluded.
 ```{r ZIFF_npbc}
-kable(cbind(with(ziff[ziff$npbc %in% c('000000', 'B00000', '190000'),], table(year,npbc)),
-            total=with(ziff, tapply(npbc, year, length))))  
+kable(with(ziff[ziff$npbc %in% c('000000', 'B00000', '190000'),], table(year,npbc)))  
 ```
-
 
 ## NAFO
 
@@ -119,7 +128,7 @@ if(!all(file.exists(c(nafoAR,nafoBR)))){
 }
 ```
 ### CHECK {.tabset}
-Nafo B is used for landings prior 1995.
+Nafo B is used for landings prior to 1995.
 
 #### compare
 ```{r NAFO_comparison}
