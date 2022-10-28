@@ -1,0 +1,27 @@
+gear.cat,gear,gear.group
+GNS,Gillnet,Gillnet
+SDN,"Danish, Scottish or Pair seine",Seine
+SB,Beach and bar or Tuck seine,Seine
+LHM,Jigger,Jigger
+GND,Driftnet,Driftnet
+GN,Gillnet,Gillnet
+FIX,Trap,Trap
+LHP,Handline,Handline
+OTB,Bottom Otter Trawl,Bottom Otter Trawl
+TBB,Shrimp beam trawl,Shrimp Beam Trawl
+FPN,Lobster Pound,Miscellaneous
+MIS,Miscellaneous,Miscellaneous
+LLS,Longline,Longline
+FWR,Weir,Weit
+OTM,Midwater trawl,Midwater Trawl
+MOB,Mobile gear,Miscellaneous
+OTB-2,Bottom Otter Trawl,Bottom Otter Trawl
+NK,Unspecified,Unspecified
+OTM-2,Midwater trawl,Midwater Trawl
+PS,Purse seine,Seine
+OTM-1,Midwater trawl,Midwater Trawl
+OTB-1,Bottom Otter Trawl,Bottom Otter Trawl
+OTB*,Bottom Otter Trawl,Bottom Otter Trawl
+OTM*,Midwater trawl,Midwater Trawl
+SPR,Pair seine,Seine
+SSC,Scottish seine,Seine
