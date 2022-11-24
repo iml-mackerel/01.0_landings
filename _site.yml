@@ -11,6 +11,8 @@ navbar:
       href: 2.0_overview.html
     - text: "Comparison"
       href: 3.0_comparison.html
+    - text: "FAQ"
+      href: 4.0_FAQ.html
       
 output:
   html_document:

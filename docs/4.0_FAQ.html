@@ -12,7 +12,7 @@
 
 <meta name="date" content="2022-11-22" />
 
-<title>Settings</title>
+<title>Landings: FAQ</title>
 
 <script src="site_libs/header-attrs-2.17/header-attrs.js"></script>
 <script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
@@ -370,66 +370,132 @@ div.tocify {
 
 
 
-<h1 class="title toc-ignore">Settings</h1>
+<h1 class="title toc-ignore">Landings: FAQ</h1>
 <h4 class="date">2022-11-22</h4>
 
 </div>
 
 
-<pre class="r"><code>##### my packages ################################################################################
-## CRAN
-cran.packages &lt;- c(&#39;ggplot2&#39;,&#39;gridExtra&#39;,&#39;viridis&#39;,&#39;plyr&#39;,&#39;reshape2&#39;,&#39;lubridate&#39;)
-install.this &lt;- cran.packages[!(cran.packages %in% utils::installed.packages()[,&quot;Package&quot;])]
-if(length(install.this)&gt;1) install.packages(install.this)
-dummy &lt;- lapply(cran.packages, require, character.only = TRUE)
-## Loading required package: ggplot2
-## Loading required package: gridExtra
-## Loading required package: viridis
-## Loading required package: viridisLite
-## Loading required package: plyr
-## Loading required package: reshape2
-## Loading required package: lubridate
-## 
-## Attaching package: &#39;lubridate&#39;
-## The following objects are masked from &#39;package:base&#39;:
-## 
-##     date, intersect, setdiff, union
+<div id="set-up" class="section level1" number="1">
+<h1><span class="header-section-number">1</span> SET-UP</h1>
+<div id="settings" class="section level2" number="1.1">
+<h2><span class="header-section-number">1.1</span> settings</h2>
+<pre class="r"><code>source(&#39;0.0_settings.R&#39;)</code></pre>
+</div>
+<div id="load-all-data" class="section level2" number="1.2">
+<h2><span class="header-section-number">1.2</span> load all data</h2>
+<pre class="r"><code>load(paste0(dir.rdat, &quot;ziff.Rdata&quot;))</code></pre>
+</div>
+</div>
+<div id="how-much-do-gillnets-and-handlinesjiggers-usually-land"
+class="section level1" number="2">
+<h1><span class="header-section-number">2</span> How much do gillnets
+and handlines/jiggers usually land?</h1>
+<p>Helpful to determine catch allowed to keep for sample collection.</p>
+<pre class="r"><code>year &lt;- 2011:2021
 
-## github
-git.packages &lt;- c(&#39;catchR&#39;,&#39;CCAM&#39;)
-install.this &lt;- git.packages[!(git.packages %in% utils::installed.packages()[,&quot;Package&quot;])]
-if(&#39;catchR&#39; %in% install.this)  devtools::install_github(&quot;iml-assess/catchR&quot;)
-if(&#39;CCAM&#39; %in% install.this)  devtools::install_github(&quot;elisvb/CCAM&quot;)
-dummy &lt;- lapply(git.packages, require, character.only = TRUE)
-## Loading required package: catchR
-## Loading required package: TMB
-## Loading required package: RcppEigen
-## Loading required package: CCAM
-## 
-## Attaching package: &#39;CCAM&#39;
-## The following objects are masked from &#39;package:catchR&#39;:
-## 
-##     spay, spya
-## The following object is masked from &#39;package:base&#39;:
-## 
-##     raw
+# subset for years
+sub &lt;- ziff[ziff$year %in% year,]
 
-##### my directories ################################################################################
-dir.ziff &lt;- &#39;data/ziff/&#39;            # dir to store csv ziff
-dir.nafo &lt;- &#39;data/nafo/&#39;                # dir to store NAFO data downloaded online
-dir.rdat &lt;- &#39;Rdata/&#39;                    # dir to store Rdata files 
-dir.dat  &lt;- &#39;data/&#39;
+# subset for gears
+sub$gear.cat2 &lt;- substr(sub$gear.cat,1,2)
+sub &lt;- sub[sub$gear.cat2 %in% c(&#39;GN&#39;,&#39;LH&#39;),]</code></pre>
+<div id="tables-and-plots" class="section level2 tabset" number="2.1">
+<h2 class="tabset"><span class="header-section-number">2.1</span> TABLES
+AND PLOTS</h2>
+<div id="table" class="section level3" number="2.1.1">
+<h3><span class="header-section-number">2.1.1</span> Table</h3>
+<pre class="r"><code>sub$c &lt;- round(sub$catch,0)
 
-##### my stock #####################################################################################
-my.species &lt;- &#39;mackerel&#39;                # no capitals
-my.nafo &lt;- 2:4
-my.year &lt;- 1968:2022                    # asessment years
+df &lt;- data.frame(catch=seq(0,1000,100))
+df$perc &lt;- round(ecdf(sub$c)(df$catch)*100,0)
 
-dir.rdat &lt;- paste0(dir.rdat,max(my.year),&#39;/&#39;)             # Rdata will saved by assessment end year
-dir.create(dir.rdat,recursive = T,showWarnings = F)
-
-##### my ggplot theme ################################################################################
-theme_set(theme_mackerel())             # theme_mackerel from catchR</code></pre>
+kable(df,digits=0,row.names = FALSE, caption=&#39;Percentage of landings equal to or lower than indicated&#39;)</code></pre>
+<table>
+<caption>Percentage of landings equal to or lower than
+indicated</caption>
+<thead>
+<tr class="header">
+<th align="right">catch</th>
+<th align="right">perc</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="right">100</td>
+<td align="right">19</td>
+</tr>
+<tr class="odd">
+<td align="right">200</td>
+<td align="right">33</td>
+</tr>
+<tr class="even">
+<td align="right">300</td>
+<td align="right">46</td>
+</tr>
+<tr class="odd">
+<td align="right">400</td>
+<td align="right">54</td>
+</tr>
+<tr class="even">
+<td align="right">500</td>
+<td align="right">63</td>
+</tr>
+<tr class="odd">
+<td align="right">600</td>
+<td align="right">69</td>
+</tr>
+<tr class="even">
+<td align="right">700</td>
+<td align="right">74</td>
+</tr>
+<tr class="odd">
+<td align="right">800</td>
+<td align="right">77</td>
+</tr>
+<tr class="even">
+<td align="right">900</td>
+<td align="right">80</td>
+</tr>
+<tr class="odd">
+<td align="right">1000</td>
+<td align="right">84</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="boxplot-overall" class="section level3" number="2.1.2">
+<h3><span class="header-section-number">2.1.2</span> boxplot
+overall</h3>
+<pre class="r"><code>ggplot(sub,aes(x=gear.cat2,y=catch,fill=as.factor(year)))+
+    geom_boxplot()+
+    scale_y_log10()+
+    labs(y=&#39;Landings per trip (kg)&#39;,x=&#39;Gear categorie&#39;,fill=&#39;Year&#39;)
+## Warning: Removed 799 rows containing non-finite values (stat_boxplot).</code></pre>
+<p><img src="4.0_FAQ_files/figure-html/plot%20boxgen-1.png" width="864" style="display: block; margin: auto;" /></p>
+</div>
+<div id="boxplot-by-region" class="section level3" number="2.1.3">
+<h3><span class="header-section-number">2.1.3</span> boxplot by
+region</h3>
+<pre class="r"><code>ggplot(sub[sub$prov.land!=&#39;NL&#39;,],aes(x=gear.cat2,y=catch,fill=as.factor(year)))+
+    geom_boxplot()+
+    scale_y_log10()+
+    labs(y=&#39;Landings per trip (kg)&#39;,x=&#39;Gear categorie&#39;,fill=&#39;Year&#39;)+
+    facet_wrap(~prov.land)
+## Warning: Removed 796 rows containing non-finite values (stat_boxplot).</code></pre>
+<p><img src="4.0_FAQ_files/figure-html/plot%20boxreg-1.png" width="864" style="display: block; margin: auto;" /></p>
+</div>
+<div id="ecdf" class="section level3" number="2.1.4">
+<h3><span class="header-section-number">2.1.4</span> ecdf</h3>
+<pre class="r"><code>plot(ecdf(sub$c),xlim=c(0,5000),xlab=&quot;Landings per trip (kg)&quot;)</code></pre>
+<p><img src="4.0_FAQ_files/figure-html/ecdf-1.png" width="864" style="display: block; margin: auto;" /></p>
+</div>
+</div>
+</div>
 
 
 
