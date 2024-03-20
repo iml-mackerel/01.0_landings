@@ -28,28 +28,22 @@ source('0.0_settings.R')
 # New catch
 load(paste0(dir.rdat, "catch.Rdata"))
 
-# Old landings (both 2016 by Thomas and 2018 by Andrew)
-repo <- "https://github.com/iml-assess/mackerel_assessment/blob/master/"
-catch.2014 <- read.ices(url(paste0(repo,'data/2014/ct.dat',"?raw=true")))
-catch.2016 <- read.ices(url(paste0(repo,'data/2016/ct.dat',"?raw=true")))
-catch.2018 <- read.ices(url(paste0(repo,'data/2018/ct.dat',"?raw=true")))
+# Old landings
+repo <- "https://github.com/iml-mackerel/00.0_model/blob/master/"
+
+ys <- c(2013,2016,2018,2020)
+ct.hist <- lapply(ys, function(x) read.ices(url(paste0(repo,'data/',x,'/ct.dat',"?raw=true"))))
+names(ct.hist) <- ys 
 ```
 
 ## Binding
 
 ```{r wrangle, message = F}
 catch.new <- ddply(catch,c('year'),summarise,catch=sum(catch,na.rm = T),source='New')
-catch.Francois <- data.frame(year=as.numeric(row.names(catch.2014)),
-                             catch=catch.2014[,1],
-                             source='2014 assessment')
-catch.Thomas   <- data.frame(year=as.numeric(row.names(catch.2016)),
-                             catch=catch.2016[,1],
-                             source='2016 assessment')
-catch.Andrew   <- data.frame(year=as.numeric(row.names(catch.2018)),
-                             catch=catch.2018[,1],
-                             source='2018 assessment')
 
-catch.comp <- rbind(catch.new,catch.Francois,catch.Thomas,catch.Andrew)
+ctm <- ldply(names(ct.hist), function(x) data.frame(year=as.numeric(row.names(ct.hist[[x]])),catch=ct.hist[[x]][,1],source=x))
+
+catch.comp <- rbind(catch.new,ctm)
 ```
 
 # PLOT
@@ -58,7 +52,8 @@ catch.comp <- rbind(catch.new,catch.Francois,catch.Thomas,catch.Andrew)
 ggplot(catch.comp[!is.na(catch.comp$catch),],aes(x=year,y=catch,color=source))+
     geom_line(size=1)+
     scale_color_viridis_d()+
-    labs(y="Landings (t)",x='Year',color="Source")
+    labs(y="Landings (t)",x='Year',color="Source")+
+    scale_y_continuous(expand=c(0,0),limits=c(0,max(catch.comp$catch,na.rm = T)*1.05))
 ```
 
 

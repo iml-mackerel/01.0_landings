@@ -10,7 +10,7 @@
 
 
 
-<meta name="date" content="2022-11-22" />
+<meta name="date" content="2023-02-01" />
 
 <title>Landings: comparison</title>
 
@@ -371,7 +371,7 @@ div.tocify {
 
 
 <h1 class="title toc-ignore">Landings: comparison</h1>
-<h4 class="date">2022-11-22</h4>
+<h4 class="date">2023-02-01</h4>
 
 </div>
 
@@ -380,33 +380,28 @@ div.tocify {
 <h1><span class="header-section-number">1</span> SET-UP</h1>
 <div id="settings" class="section level2" number="1.1">
 <h2><span class="header-section-number">1.1</span> settings</h2>
-<pre class="r"><code>source(&#39;0.0_settings.R&#39;)</code></pre>
+<pre class="r"><code>source(&#39;0.0_settings.R&#39;)
+## Warning: package &#39;ggplot2&#39; was built under R version 4.2.2</code></pre>
 </div>
 <div id="load-all-data" class="section level2" number="1.2">
 <h2><span class="header-section-number">1.2</span> load all data</h2>
 <pre class="r"><code># New catch
 load(paste0(dir.rdat, &quot;catch.Rdata&quot;))
 
-# Old landings (both 2016 by Thomas and 2018 by Andrew)
-repo &lt;- &quot;https://github.com/iml-assess/mackerel_assessment/blob/master/&quot;
-catch.2014 &lt;- read.ices(url(paste0(repo,&#39;data/2014/ct.dat&#39;,&quot;?raw=true&quot;)))
-catch.2016 &lt;- read.ices(url(paste0(repo,&#39;data/2016/ct.dat&#39;,&quot;?raw=true&quot;)))
-catch.2018 &lt;- read.ices(url(paste0(repo,&#39;data/2018/ct.dat&#39;,&quot;?raw=true&quot;)))</code></pre>
+# Old landings
+repo &lt;- &quot;https://github.com/iml-mackerel/00.0_model/blob/master/&quot;
+
+ys &lt;- c(2013,2016,2018,2020)
+ct.hist &lt;- lapply(ys, function(x) read.ices(url(paste0(repo,&#39;data/&#39;,x,&#39;/ct.dat&#39;,&quot;?raw=true&quot;))))
+names(ct.hist) &lt;- ys </code></pre>
 </div>
 <div id="binding" class="section level2" number="1.3">
 <h2><span class="header-section-number">1.3</span> Binding</h2>
 <pre class="r"><code>catch.new &lt;- ddply(catch,c(&#39;year&#39;),summarise,catch=sum(catch,na.rm = T),source=&#39;New&#39;)
-catch.Francois &lt;- data.frame(year=as.numeric(row.names(catch.2014)),
-                             catch=catch.2014[,1],
-                             source=&#39;2014 assessment&#39;)
-catch.Thomas   &lt;- data.frame(year=as.numeric(row.names(catch.2016)),
-                             catch=catch.2016[,1],
-                             source=&#39;2016 assessment&#39;)
-catch.Andrew   &lt;- data.frame(year=as.numeric(row.names(catch.2018)),
-                             catch=catch.2018[,1],
-                             source=&#39;2018 assessment&#39;)
 
-catch.comp &lt;- rbind(catch.new,catch.Francois,catch.Thomas,catch.Andrew)</code></pre>
+ctm &lt;- ldply(names(ct.hist), function(x) data.frame(year=as.numeric(row.names(ct.hist[[x]])),catch=ct.hist[[x]][,1],source=x))
+
+catch.comp &lt;- rbind(catch.new,ctm)</code></pre>
 </div>
 </div>
 <div id="plot" class="section level1" number="2">

@@ -76,3 +76,36 @@ ggplot(sub[sub$prov.land!='NL',],aes(x=gear.cat2,y=catch,fill=as.factor(year)))+
 ```{r ecdf}
 plot(ecdf(sub$c),xlim=c(0,5000),xlab="Landings per trip (kg)")
 ```
+
+# Timing of switch from nets to hooks in 4T
+
+## overall
+```{r switch to hooks}
+lookup <- data.frame(gear.group=c('Gillnet','Driftnet','Handline','Jigger'),
+                     hooknet=c('Drift or gillnet','Drift or gillnet','Handline or jigger','Handline or jigger'))
+ziffsub <- merge(ziff[ziff$gear.group %in% lookup$gear.group & ziff$nafo=='4T' & !is.na(ziff$gear.group) & !is.na(ziff$nafo),],lookup,all.x=TRUE)
+ziffsub$doy <- yday(ziffsub$land.date)
+
+df.hooknet <- ddply(ziffsub,c('hooknet','doy'),summarise,catch=sum(catch,na.rm=T))
+ggplot(df.hooknet,aes(x=doy,y=catch,fill=hooknet))+
+    geom_rect(aes(xmin=136,xmax=206,ymin=-Inf,ymax=Inf),fill='darkgrey',alpha=0.5)+ # dates from resdoc egg survey Lehoux
+    geom_bar(stat='identity')+
+    geom_vline(xintercept=171)+
+    scale_y_continuous(expand=c(0,0))
+
+```
+
+```{r switch to hooks annual, fig.width=18,fig.height=14}
+df.hooknety <- ddply(ziffsub,c('year','hooknet','doy'),summarise,catch=sum(catch,na.rm=T))
+spawning_info <- read_excel("C:/Users/VANBE/Desktop/post-doc/DATA/mack_eggs_biochem/data/spawning_info.xlsx")
+
+ggplot(df.hooknety,aes(x=doy,y=catch,fill=hooknet))+
+    geom_rect(data=spawning_info, aes(xmin=136,xmax=206,ymin=-Inf,ymax=Inf),fill='darkgrey',alpha=0.5)+
+    geom_bar(stat='identity')+
+    geom_vline(xintercept=yday("21-06-2001"))+
+    geom_vline(xintercept=171)+
+    facet_wrap(~year,scale='free_y')+
+    theme(axis.text.y = element_blank())+
+    scale_y_continuous(expand=c(0,0))+
+    scale_x_continuous(expand=c(0,0),limits=c(80,320))
+```

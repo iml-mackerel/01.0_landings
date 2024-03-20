@@ -6,6 +6,6 @@
 
 
 The rmarkdown site can be previewed at (note that this is slow):
-https://htmlpreview.github.io/?https://raw.githubusercontent.com/iml-mackerel/1.0_landings/master/docs/index.html
+https://htmlpreview.github.io/?https://raw.githubusercontent.com/iml-mackerel/01.0_landings/master/docs/index.html
 
 

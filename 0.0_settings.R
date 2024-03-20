@@ -21,7 +21,7 @@ dir.dat  <- 'data/'
 ##### my stock #####################################################################################
 my.species <- 'mackerel'                # no capitals
 my.nafo <- 2:4
-my.year <- 1968:2022                    # asessment years
+my.year <- 1968:2023                   # asessment years
 
 dir.rdat <- paste0(dir.rdat,max(my.year),'/')             # Rdata will saved by assessment end year
 dir.create(dir.rdat,recursive = T,showWarnings = F)

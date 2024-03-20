@@ -45,6 +45,9 @@ if(!file.exists(ziffR)){
     load(ziffR)
 }
 
+# Creation time
+df <- file.info(list.files(dir.rdat, full.names = T,pattern="ziff"))
+df[which.max(df$mtime),'mtime']
 ```
 ### CHECKS {.tabset}
 
@@ -52,15 +55,24 @@ if(!file.exists(ziffR)){
 Nafo 5Y and 5Ze are partially in the US.
 ```{r ziff areas}
 # NAFO 5 = landings in Canadian EEZ (northern contingent)
-kable(with(ziff, table(nafo,month)))     
+kable(with(ziff, table(nafo,month)),caption = 'Number of records per month and NAFO area, entire database')     
 ```
 
 #### NA weights
 How many NA weights are there?
 ```{r ziff nas}
-na <- cbind(all=with(ziff,table(year,useNA = 'always')),
-                na=with(ziff[is.na(ziff$catch),],table(year,useNA = 'always')))
+na <- ddply(ziff,c('year'),summarise,
+            nacatch=length(catch[is.na(catch)]),
+            nacatchland=length(catch[is.na(catch)&is.na(catch.landed)]),
+            nacatchlandvalue=length(catch[is.na(catch)&is.na(catch.landed)&is.na(catch.value)]))
 kable(na)
+```
+
+#### catch vs land weight
+How different are both?
+```{r ziff catchvsland}
+dif <- (ziff$catch-ziff$catch.landed)/1000 #t
+kable(round(quantile(dif[!is.na(dif)],c(0,0.025,0.25,0.5,0.75,0.975,1)),3),caption = 'Difference between catch.landed and catch (kg)')
 ```
 
 #### 0 weights
@@ -77,11 +89,27 @@ ggplot(ziff,aes(x=lubridate::yday(capt.date)))+geom_histogram(binwidth = 1)+
     scale_y_continuous(expand=c(0,0))
 ```
 
-#### NPBC
+#### NBPC
 There are 3 special nbpc numbers that indicate landings that are not necessarily daily (e.g., monthly totals) or for which the data is only approximate. For instance, B00000 landings seems to be on the first of last of a certain month. For analyses of daily landings these might need to be excluded.
 ```{r ZIFF_npbc}
 kable(with(ziff[ziff$npbc %in% c('000000', 'B00000', '190000'),], table(year,npbc)))  
 ```
+
+#### Duplicates
+There are rows that are 100% identical (same vessel, catch and landing date, trip, etc. AND even landed weight). Those are removed, but the effect is negligible.
+```{r ZIFF_dups}
+# Duplicates
+dup <- data.frame(year=ziff$year,catch=ziff$catch,dup=duplicated(ziff))
+dupd <- ddply(dup,c('year','dup'),summarise,catch=sum(catch,na.rm=TRUE))
+ziff <- ziff[!dup$dup,]
+ggplot(dupd,aes(x=year,y=catch/1000,fill=dup))+
+    geom_bar(stat='identity',position='stack')+
+    scale_x_continuous(expand=c(0,0))+
+    scale_y_continuous(expand=c(0,0))+
+    labs(x='Year',y='Landings (t)',fill='Duplicate')
+
+```
+
 
 ## NAFO
 
@@ -98,7 +126,7 @@ if(!all(file.exists(c(nafoAR,nafoBR)))){
     with(nafoA[!grepl(paste0(my.nafo, collapse = "|"),nafoA$nafo)&
                  grepl('canada',nafoA$country,ignore.case = TRUE),] ,table(year,nafo))
 
-    # only keep my.nafo; other areas are NOT from nothern contingent (winter months in US or Europe)
+    # only keep my.nafo; other areas are not from nothern contingent (winter months in US or Europe)
     nafoA <- nafoA[grepl(paste0(my.nafo, collapse = "|"),nafoA$nafo),] 
     table(nafoA$nafo)
     
@@ -126,6 +154,10 @@ if(!all(file.exists(c(nafoAR,nafoBR)))){
     load(nafoAR)
     load(nafoBR)
 }
+
+# Creation time
+df <- file.info(list.files(dir.rdat, full.names = T,pattern="nafoB"))
+df[which.max(df$mtime),'mtime']
 ```
 ### CHECK {.tabset}
 Nafo B is used for landings prior to 1995.
@@ -140,7 +172,7 @@ ggplot()+
     scale_x_continuous(expand=c(0,0))+ scale_y_continuous(expand=c(0,0))
 ```
 
-## CATCH = NAFO + ZIFF
+## CATCH = NAFOB + ZIFF
 
 ```{r CATCH, message = F}
 ## bind both
@@ -148,6 +180,7 @@ ziff$source <-'ziff'
 ziff$catch <- ziff$catch/1000            # kg to tonnes
 ziff$country <- 'Canada'                 # consistency with nafo
 ziff$prov <- ifelse(ziff$prov.land=='Unknown',as.character(ziff$prov.home),as.character(ziff$prov.land))
+names(ziff)[which(names(ziff) =='gear_cat')] <- 'gear.cat'
 
 nafoB$source <- 'nafo'                   # work with detailed B base
 

@@ -10,7 +10,7 @@
 
 
 
-<meta name="date" content="2022-11-22" />
+<meta name="date" content="2022-11-25" />
 
 <title>Settings</title>
 
@@ -371,7 +371,7 @@ div.tocify {
 
 
 <h1 class="title toc-ignore">Settings</h1>
-<h4 class="date">2022-11-22</h4>
+<h4 class="date">2022-11-25</h4>
 
 </div>
 
@@ -382,18 +382,6 @@ cran.packages &lt;- c(&#39;ggplot2&#39;,&#39;gridExtra&#39;,&#39;viridis&#39;,&#
 install.this &lt;- cran.packages[!(cran.packages %in% utils::installed.packages()[,&quot;Package&quot;])]
 if(length(install.this)&gt;1) install.packages(install.this)
 dummy &lt;- lapply(cran.packages, require, character.only = TRUE)
-## Loading required package: ggplot2
-## Loading required package: gridExtra
-## Loading required package: viridis
-## Loading required package: viridisLite
-## Loading required package: plyr
-## Loading required package: reshape2
-## Loading required package: lubridate
-## 
-## Attaching package: &#39;lubridate&#39;
-## The following objects are masked from &#39;package:base&#39;:
-## 
-##     date, intersect, setdiff, union
 
 ## github
 git.packages &lt;- c(&#39;catchR&#39;,&#39;CCAM&#39;)
@@ -401,18 +389,6 @@ install.this &lt;- git.packages[!(git.packages %in% utils::installed.packages()[
 if(&#39;catchR&#39; %in% install.this)  devtools::install_github(&quot;iml-assess/catchR&quot;)
 if(&#39;CCAM&#39; %in% install.this)  devtools::install_github(&quot;elisvb/CCAM&quot;)
 dummy &lt;- lapply(git.packages, require, character.only = TRUE)
-## Loading required package: catchR
-## Loading required package: TMB
-## Loading required package: RcppEigen
-## Loading required package: CCAM
-## 
-## Attaching package: &#39;CCAM&#39;
-## The following objects are masked from &#39;package:catchR&#39;:
-## 
-##     spay, spya
-## The following object is masked from &#39;package:base&#39;:
-## 
-##     raw
 
 ##### my directories ################################################################################
 dir.ziff &lt;- &#39;data/ziff/&#39;            # dir to store csv ziff
