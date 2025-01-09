@@ -193,7 +193,7 @@ bycatch[order(bycatch$catch,decreasing = TRUE),]
 
 # from vessels with experimental license: nothing
 nr <- read.csv(paste0(dir.dat,'npbc_samples',y,'.csv'))
-df.year[df.year$npbc %in% nr[,1],]
+df.year[df.year$npbc %in% nr[,1], c("land.date", "gear", "prov.land","species_en", "capt.estimated")]
 ```
 
 # PLOTS {.tabset}
