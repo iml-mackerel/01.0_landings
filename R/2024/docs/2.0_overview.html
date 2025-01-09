@@ -10,7 +10,7 @@
 
 
 
-<meta name="date" content="2024-12-17" />
+<meta name="date" content="2025-01-09" />
 
 <title>Landings</title>
 
@@ -371,7 +371,7 @@ div.tocify {
 
 
 <h1 class="title toc-ignore">Landings</h1>
-<h4 class="date">2024-12-17</h4>
+<h4 class="date">2025-01-09</h4>
 
 </div>
 
@@ -7830,37 +7830,26 @@ kable(df.top[df.top$catch.perc&gt;0,],digits=0,row.names = FALSE, caption=paste0
 <div id="current-year" class="section level2" number="3.11">
 <h2><span class="header-section-number">3.11</span> Current year</h2>
 <p>All regions have data (though preliminary)</p>
-<pre class="r"><code>y &lt;- max(my.year)            
+<pre class="r"><code>y &lt;- max(my.year)           
 y
 ## [1] 2024
-df.2022 &lt;- ziff[ziff$year %in% y &amp; !is.na(ziff$catch),]
-df.2022$catch &lt;- df.2022$catch/1000
+df.year &lt;- ziff[ziff$year %in% y &amp; !is.na(ziff$catch),]
+df.year$catch &lt;- df.year$catch/1000
 
 # total landings (t): 56t
-round(sum(df.2022$catch,na.rm = T),0)
+round(sum(df.year$catch,na.rm = T),0)
 ## [1] 101
 
 # top landings (t): 38t landed by two trips, both targetting mackerel in July (maritimes)
-df.2022 &lt;- df.2022[order(df.2022$catch,decreasing = T),]
-head(df.2022[,c(&#39;catch&#39;,&#39;species.maincapt_en&#39;,&#39;species.maintarg_en&#39;,&#39;land.date&#39;,&#39;nafo&#39;,&#39;gear_en&#39;,&#39;region.en&#39;)],10)
-##        catch species.maincapt_en species.maintarg_en  land.date nafo                gear_en region.en
-## 357244 7.000             Herring             Herring 2024-08-21   4X            Purse seine Maritimes
-## 364017 4.797            Mackerel            Mackerel 2024-05-23   4X                   &lt;NA&gt; Maritimes
-## 363459 4.752            Mackerel            Mackerel 2024-05-20   4X                   &lt;NA&gt; Maritimes
-## 363160 3.720            Mackerel            Mackerel 2024-05-21   4X                   &lt;NA&gt; Maritimes
-## 364303 3.720            Mackerel            Mackerel 2024-05-18   4X                   &lt;NA&gt; Maritimes
-## 363691 2.880            Mackerel            Mackerel 2024-05-24   4X                   &lt;NA&gt; Maritimes
-## 363481 1.920            Mackerel            Mackerel 2024-05-17   4X                   &lt;NA&gt; Maritimes
-## 363550 1.200            Mackerel            Mackerel 2024-05-25   4X                   &lt;NA&gt; Maritimes
-## 164432 1.134             Herring             Herring 2024-07-25   4X Gillnet (set or fixed) Maritimes
-## 16157  0.635            Mackerel            Mackerel 2024-06-22   4X                   Weir Maritimes
+#df.year &lt;- df.year[order(df.year$catch,decreasing = T),]
+#head(df.year[,c(&#39;catch&#39;,&#39;species.maincapt_en&#39;,&#39;species.maintarg_en&#39;,&#39;land.date&#39;,&#39;nafo&#39;,&#39;gear_en&#39;,&#39;region.en&#39;)],10)
 
-# At least from by-catch (but many NA, so don&#39;t know): 14t
-round(sum(df.2022[df.2022$species.maintarg_en!=&#39;Mackerel&#39; &amp;!is.na(df.2022$species.maintarg_en),&#39;catch&#39;],0))
+# At least from by-catch (but many NA, so don&#39;t know): 
+round(sum(df.year[df.year$species.maintarg_en!=&#39;Mackerel&#39; &amp;!is.na(df.year$species.maintarg_en),&#39;catch&#39;],0))
 ## [1] 18
 
 #what by-catch
-bycatch &lt;- ddply(df.2022,c(&#39;species.maintarg_en&#39;),summarise,catch=sum(catch))
+bycatch &lt;- ddply(df.year,c(&#39;species.maintarg_en&#39;),summarise,catch=sum(catch))
 bycatch[order(bycatch$catch,decreasing = TRUE),]
 ##       species.maintarg_en  catch
 ## 5                Mackerel 79.488
@@ -7877,50 +7866,24 @@ bycatch[order(bycatch$catch,decreasing = TRUE),]
 ## 2                     Cod  0.001
 
 # from vessels with experimental license: nothing
-nr &lt;- read.csv(paste0(dir.dat,&#39;npbc_samples.csv&#39;))
-df.2022[df.2022$npbc %in% nr[,1],]
-##        gear_cat region tonnage.class.id gear species.maincapt species.maintarg species   npbc tonnage length length.class.id power power.class.id port.home cef_att bas_glf cie_bat management.unit
-## 134769      GNS      S                1   41              250              250     250 106065      10     39               2   225              1     13217      NA      NA      NA              NA
-## 134768      GNS      S                1   41              250              250     250 106065      10     39               2   225              1     13217      NA      NA      NA              NA
-## 164176      GNS      S                1   41              250              250     250 106065      10     39               2   225              1     13217      NA      NA      NA              NA
-## 124929      GNS      S                1   41              250              250     250 106065      10     39               2   225              1     13217      NA      NA      NA              NA
-## 267311      LHP      S                1   59              250              250     250 106065      10     39               2   225              1     13217      NA      NA      NA              NA
-##        trip.nr  land.date nafo.sub nafo gear.class.id port.land cef_deb buyer.firm buyer.code spgrp species.size species.shape species.qual catch.unit catch.landed catch.value catch effort lim200
-## 134769      24 2024-08-17      4XM   4X             1     12521      NA       9000         NA     2            9             1            U          K          449     1239.41 0.449      Y     NA
-## 134768      23 2024-08-16      4XM   4X             1     12521      NA       9000         NA     2            9             1            U          K          445     1226.89 0.445      Y     NA
-## 164176      22 2024-08-15      4XM   4X             1     12521      NA       9000         NA     2            9             1            U          K          431     1189.33 0.431      Y     NA
-## 124929      20 2024-07-03      4XM   4X             1     12521      NA       9000         NA     2            9             1            U          K          254      701.08 0.254      Y     NA
-## 267311      21 2024-07-04      4XM   4X             1     12521      NA       9000         NA     2            9             1            U          K           32       87.64 0.032      Y     NA
-##        trip.prop trip.seadays trip.landdays trip.fishingdays trip.fishinghours gear.number  capt.date depthclass lat.orig lon.orig latit_fin longit_fin units       nip no_permis z_quota  seqnum depth
-## 134769         1            1             1                1                NA          NA 2024-08-17         NA  44.5031  63.9926        NA         NA    NA 715076902    306752    20LU 1751722    NA
-## 134768         1            1             1                1                NA          NA 2024-08-16         NA  44.5031  63.9926        NA         NA    NA 715076902    306752    20LU 1751721    NA
-## 164176         1            1             1                1                NA          NA 2024-08-15         NA  44.5031  63.9926        NA         NA    NA 715076902    306752    20LU 1751720    NA
-## 124929         1            1             1                1                NA          NA 2024-07-03         NA  44.5031  63.9926        NA         NA    NA 715076902    306752    20LU 1751718    NA
-## 267311         1            1             1                1                NA          NA 2024-07-04         NA  44.5031  63.9926        NA         NA    NA 715076902    306752    20LU 1751719    NA
-##        nbpc_flag nbpc_type nip_flag nip_type an_act bpc_budup capt.estimated flag_admin flag_allt flag_budup flag_ep flag_pol flag_qi id_budup id_cl_permis id_plong larg_eng lat_dd long_dd no_carte
-## 134769         1         1        1        1     NA        NA             NA         NA        NA         NA      NA       NA      NA       NA           NA       NA     &lt;NA&gt;     NA      NA     &lt;NA&gt;
-## 134768         1         1        1        1     NA        NA             NA         NA        NA         NA      NA       NA      NA       NA           NA       NA     &lt;NA&gt;     NA      NA     &lt;NA&gt;
-## 164176         1         1        1        1     NA        NA             NA         NA        NA         NA      NA       NA      NA       NA           NA       NA     &lt;NA&gt;     NA      NA     &lt;NA&gt;
-## 124929         1         1        1        1     NA        NA             NA         NA        NA         NA      NA       NA      NA       NA           NA       NA     &lt;NA&gt;     NA      NA     &lt;NA&gt;
-## 267311         1         1        1        1     NA        NA             NA         NA        NA         NA      NA       NA      NA       NA           NA       NA     &lt;NA&gt;     NA      NA     &lt;NA&gt;
-##        no_grp_cont no_hailin form.id nocie noorg info region.polygon qut_engin typ_pec zon_permis  lon.gis lat.gis year year.management catch.month land.month month catch.trim land.trim trim
-## 134769          NA        NA            NA    NA                            NA                    -63.9926 44.5031 2024            2024           8          8     8          3         3    3
-## 134768          NA        NA            NA    NA                            NA                    -63.9926 44.5031 2024            2024           8          8     8          3         3    3
-## 164176          NA        NA            NA    NA                            NA                    -63.9926 44.5031 2024            2024           8          8     8          3         3    3
-## 124929          NA        NA            NA    NA                            NA                    -63.9926 44.5031 2024            2024           7          7     7          3         3    3
-## 267311          NA        NA            NA    NA                            NA                    -63.9926 44.5031 2024            2024           7          7     7          3         3    3
-##        prov.home prov.land species_en species_fr      species_lat species.maintarg_en species.maintarg_fr species.maintarg_lat species.maincapt_en species.maincapt_fr species.maincapt_lat
-## 134769        NS        NS   Mackerel  Maquereau Scomber scombrus            Mackerel           Maquereau     Scomber scombrus            Mackerel           Maquereau     Scomber scombrus
-## 134768        NS        NS   Mackerel  Maquereau Scomber scombrus            Mackerel           Maquereau     Scomber scombrus            Mackerel           Maquereau     Scomber scombrus
-## 164176        NS        NS   Mackerel  Maquereau Scomber scombrus            Mackerel           Maquereau     Scomber scombrus            Mackerel           Maquereau     Scomber scombrus
-## 124929        NS        NS   Mackerel  Maquereau Scomber scombrus            Mackerel           Maquereau     Scomber scombrus            Mackerel           Maquereau     Scomber scombrus
-## 267311        NS        NS   Mackerel  Maquereau Scomber scombrus            Mackerel           Maquereau     Scomber scombrus            Mackerel           Maquereau     Scomber scombrus
-##                                gear_fr                gear_en gear_fixmob tonnage.class.id_desc region.fr region.en gear.group
-## 134769           Filet maillant (fixe) Gillnet (set or fixed)           F  0-24.9 (Canada only) Maritimes Maritimes    Gillnet
-## 134768           Filet maillant (fixe) Gillnet (set or fixed)           F  0-24.9 (Canada only) Maritimes Maritimes    Gillnet
-## 164176           Filet maillant (fixe) Gillnet (set or fixed)           F  0-24.9 (Canada only) Maritimes Maritimes    Gillnet
-## 124929           Filet maillant (fixe) Gillnet (set or fixed)           F  0-24.9 (Canada only) Maritimes Maritimes    Gillnet
-## 267311 Ligne \xe0 main (app\xe2t\xe9e)     Hand line (baited)           F  0-24.9 (Canada only) Maritimes Maritimes   Handline</code></pre>
+nr &lt;- read.csv(paste0(dir.dat,&#39;npbc_samples&#39;,y,&#39;.csv&#39;))
+df.year[df.year$npbc %in% nr[,1],]
+##   [1] gear_cat              region                tonnage.class.id      gear                  species.maincapt      species.maintarg      species               npbc                 
+##   [9] tonnage               length                length.class.id       power                 power.class.id        port.home             cef_att               bas_glf              
+##  [17] cie_bat               management.unit       trip.nr               land.date             nafo.sub              nafo                  gear.class.id         port.land            
+##  [25] cef_deb               buyer.firm            buyer.code            spgrp                 species.size          species.shape         species.qual          catch.unit           
+##  [33] catch.landed          catch.value           catch                 effort                lim200                trip.prop             trip.seadays          trip.landdays        
+##  [41] trip.fishingdays      trip.fishinghours     gear.number           capt.date             depthclass            lat.orig              lon.orig              latit_fin            
+##  [49] longit_fin            units                 nip                   no_permis             z_quota               seqnum                depth                 nbpc_flag            
+##  [57] nbpc_type             nip_flag              nip_type              an_act                bpc_budup             capt.estimated        flag_admin            flag_allt            
+##  [65] flag_budup            flag_ep               flag_pol              flag_qi               id_budup              id_cl_permis          id_plong              larg_eng             
+##  [73] lat_dd                long_dd               no_carte              no_grp_cont           no_hailin             form.id               nocie                 noorg                
+##  [81] info                  region.polygon        qut_engin             typ_pec               zon_permis            lon.gis               lat.gis               year                 
+##  [89] year.management       catch.month           land.month            month                 catch.trim            land.trim             trim                  prov.home            
+##  [97] prov.land             species_en            species_fr            species_lat           species.maintarg_en   species.maintarg_fr   species.maintarg_lat  species.maincapt_en  
+## [105] species.maincapt_fr   species.maincapt_lat  gear_fr               gear_en               gear_fixmob           tonnage.class.id_desc region.fr             region.en            
+## [113] gear.group           
+## &lt;0 lignes&gt; (ou &#39;row.names&#39; de longueur nulle)</code></pre>
 </div>
 </div>
 <div id="plots" class="section level1 tabset" number="4">
@@ -7982,14 +7945,14 @@ p &lt;- ggplot(df.nafogroup %&gt;%  filter(year &gt; 2013),aes(x=year,y=catch/10
  
 # plot (English)
 pen &lt;- p+labs(y=&#39;Landings (kt)&#39;,x=&#39;Year&#39;,fill=&#39;Region&#39;)
-ggsave(paste0(&#39;../../img/&#39;,tail(my.year,1),&#39;/catch2011_.png&#39;),pen,width = 15,height = 8,units = &#39;cm&#39;)
+ggsave(paste0(&#39;../../img/&#39;,tail(my.year,1),&#39;/catchzoom.png&#39;),pen,width = 15,height = 8,units = &#39;cm&#39;)
 
 #plot (French)
 pfr &lt;- p+labs(y=&#39;Débarquements (kt)&#39;,x=&#39;Année&#39;,fill=&#39;Région&#39;)
-ggsave(paste0(&#39;../../img/&#39;,tail(my.year,1),&#39;/catch2011_FR.png&#39;),pfr,width = 15,height = 8,units = &#39;cm&#39;)
+ggsave(paste0(&#39;../../img/&#39;,tail(my.year,1),&#39;/catchzoom_FR.png&#39;),pfr,width = 15,height = 8,units = &#39;cm&#39;)
 
 pbi &lt;- p+labs(y=&#39;Débarquements | Landings (kt)&#39;,x=&#39;Année | Year&#39;,fill=&#39;Region&#39;)
-ggsave(paste0(&#39;../../img/&#39;,tail(my.year,1),&#39;/catch2011_BI.png&#39;),pbi,width = 15,height = 8,units = &#39;cm&#39;)
+ggsave(paste0(&#39;../../img/&#39;,tail(my.year,1),&#39;/catchzoom_BI.png&#39;),pbi,width = 15,height = 8,units = &#39;cm&#39;)
 
 pen</code></pre>
 <p><img src="2.0_overview_files/figure-html/plotrecent%20all-1.png" width="864" style="display: block; margin: auto;" /></p>

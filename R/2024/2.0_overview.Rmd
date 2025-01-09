@@ -172,28 +172,28 @@ kable(df.top[df.top$catch.perc>0,],digits=0,row.names = FALSE, caption=paste0('T
 ## Current year
 All regions have data (though preliminary)
 ```{r table year}
-y <- max(my.year)            
+y <- max(my.year)           
 y
-df.2022 <- ziff[ziff$year %in% y & !is.na(ziff$catch),]
-df.2022$catch <- df.2022$catch/1000
+df.year <- ziff[ziff$year %in% y & !is.na(ziff$catch),]
+df.year$catch <- df.year$catch/1000
 
 # total landings (t): 56t
-round(sum(df.2022$catch,na.rm = T),0)
+round(sum(df.year$catch,na.rm = T),0)
 
 # top landings (t): 38t landed by two trips, both targetting mackerel in July (maritimes)
-df.2022 <- df.2022[order(df.2022$catch,decreasing = T),]
-head(df.2022[,c('catch','species.maincapt_en','species.maintarg_en','land.date','nafo','gear_en','region.en')],10)
+#df.year <- df.year[order(df.year$catch,decreasing = T),]
+#head(df.year[,c('catch','species.maincapt_en','species.maintarg_en','land.date','nafo','gear_en','region.en')],10)
 
-# At least from by-catch (but many NA, so don't know): 14t
-round(sum(df.2022[df.2022$species.maintarg_en!='Mackerel' &!is.na(df.2022$species.maintarg_en),'catch'],0))
+# At least from by-catch (but many NA, so don't know): 
+round(sum(df.year[df.year$species.maintarg_en!='Mackerel' &!is.na(df.year$species.maintarg_en),'catch'],0))
 
 #what by-catch
-bycatch <- ddply(df.2022,c('species.maintarg_en'),summarise,catch=sum(catch))
+bycatch <- ddply(df.year,c('species.maintarg_en'),summarise,catch=sum(catch))
 bycatch[order(bycatch$catch,decreasing = TRUE),]
 
 # from vessels with experimental license: nothing
-nr <- read.csv(paste0(dir.dat,'npbc_samples.csv'))
-df.2022[df.2022$npbc %in% nr[,1],]
+nr <- read.csv(paste0(dir.dat,'npbc_samples',y,'.csv'))
+df.year[df.year$npbc %in% nr[,1],]
 ```
 
 # PLOTS {.tabset}
