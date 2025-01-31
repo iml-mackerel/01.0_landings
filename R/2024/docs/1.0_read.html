@@ -10,7 +10,7 @@
 
 
 
-<meta name="date" content="2025-01-09" />
+<meta name="date" content="2025-01-30" />
 
 <title>Read</title>
 
@@ -371,14 +371,15 @@ div.tocify {
 
 
 <h1 class="title toc-ignore">Read</h1>
-<h4 class="date">2025-01-09</h4>
+<h4 class="date">2025-01-30</h4>
 
 </div>
 
 
 <div id="set-up" class="section level1" number="1">
 <h1><span class="header-section-number">1</span> SET-UP</h1>
-<pre class="r"><code>source(&#39;0.0_settings.R&#39;)</code></pre>
+<pre class="r"><code>source(&#39;0.0_settings.R&#39;)
+source(&quot;read.ziff.R&quot;)</code></pre>
 </div>
 <div id="landings" class="section level1" number="2">
 <h1><span class="header-section-number">2</span> Landings</h1>
@@ -425,7 +426,7 @@ if(!file.exists(ziffR)){
     
     # Species included:
     with(ziff, table(species,year))
-    ziff &lt;- ziff[ziff$species==250,]   # code 960: few heads in 1996  code 951: wrong whelk
+    ziff &lt;- ziff[ziff$species %in% c(250),]   # code 960: few heads in 1996  code 951: wrong whelk (clams main target..)
 names(ziff)[19] &lt;-  &quot;nafo.sub&quot;
 names(ziff)[20] &lt;-  &quot;nafo&quot;
     save(ziff, file = ziffR)
@@ -436,7 +437,7 @@ names(ziff)[20] &lt;-  &quot;nafo&quot;
 # Creation time
 df &lt;- file.info(list.files(dir.rdat, full.names = T,pattern=&quot;ziff&quot;))
 df[which.max(df$mtime),&#39;mtime&#39;]
-## [1] &quot;2024-12-13 13:35:17 EST&quot;</code></pre>
+## [1] &quot;2025-01-27 15:20:09 EST&quot;</code></pre>
 <div id="checks" class="section level3 tabset" number="2.1.1">
 <h3 class="tabset"><span class="header-section-number">2.1.1</span>
 CHECKS</h3>
@@ -624,7 +625,7 @@ database</caption>
 <td align="right">175</td>
 <td align="right">3693</td>
 <td align="right">54353</td>
-<td align="right">29356</td>
+<td align="right">29355</td>
 <td align="right">60133</td>
 <td align="right">60163</td>
 <td align="right">22713</td>
@@ -640,7 +641,7 @@ database</caption>
 <td align="right">1136</td>
 <td align="right">3483</td>
 <td align="right">1742</td>
-<td align="right">2995</td>
+<td align="right">2998</td>
 <td align="right">5298</td>
 <td align="right">3879</td>
 <td align="right">133</td>
@@ -684,7 +685,7 @@ database</caption>
 <td align="right">299</td>
 <td align="right">6448</td>
 <td align="right">6963</td>
-<td align="right">3895</td>
+<td align="right">3896</td>
 <td align="right">6350</td>
 <td align="right">6378</td>
 <td align="right">3899</td>
@@ -719,7 +720,7 @@ database</caption>
 <td align="right">74</td>
 <td align="right">0</td>
 <td align="right">0</td>
-<td align="right">0</td>
+<td align="right">1</td>
 </tr>
 </tbody>
 </table>
@@ -727,7 +728,7 @@ database</caption>
 <div id="na-weights" class="section level4" number="2.1.1.2">
 <h4><span class="header-section-number">2.1.1.2</span> NA weights</h4>
 <p>How many NA weights are there?</p>
-<pre class="r"><code>na &lt;- ddply(ziff,c(&#39;year&#39;),summarise,
+<pre class="r"><code>na &lt;- ddply(ziff,c(&#39;year&#39;),plyr::summarise,
             nacatch=length(catch[is.na(catch)]),
             nacatchland=length(catch[is.na(catch)&amp;is.na(catch.landed)]),
             nacatchlandvalue=length(catch[is.na(catch)&amp;is.na(catch.landed)&amp;is.na(catch.value)]))
@@ -1309,7 +1310,7 @@ landing date, trip, etc. AND even landed weight). Those are removed, but
 the effect is negligible.</p>
 <pre class="r"><code># Duplicates
 dup &lt;- data.frame(year=ziff$year,catch=ziff$catch,dup=duplicated(ziff))
-dupd &lt;- ddply(dup,c(&#39;year&#39;,&#39;dup&#39;),summarise,catch=sum(catch,na.rm=TRUE))
+dupd &lt;- ddply(dup,c(&#39;year&#39;,&#39;dup&#39;),plyr::summarise,catch=sum(catch,na.rm=TRUE))
 ziff &lt;- ziff[!dup$dup,]
 ggplot(dupd,aes(x=year,y=catch/1000,fill=dup))+
     geom_bar(stat=&#39;identity&#39;,position=&#39;stack&#39;)+
@@ -1366,7 +1367,7 @@ if(!all(file.exists(c(nafoAR,nafoBR)))){
 # Creation time
 df &lt;- file.info(list.files(dir.rdat, full.names = T,pattern=&quot;nafoB&quot;))
 df[which.max(df$mtime),&#39;mtime&#39;]
-## [1] &quot;2024-12-11 13:59:16 EST&quot;</code></pre>
+## [1] &quot;2025-01-27 15:20:40 EST&quot;</code></pre>
 <div id="check" class="section level3 tabset" number="2.2.1">
 <h3 class="tabset"><span class="header-section-number">2.2.1</span>
 CHECK</h3>
@@ -1383,9 +1384,75 @@ CHECK</h3>
 </div>
 </div>
 </div>
-<div id="catch-nafob-ziff" class="section level2" number="2.3">
-<h2><span class="header-section-number">2.3</span> CATCH = NAFOB +
-ZIFF</h2>
+<div id="s52-catch" class="section level2" number="2.3">
+<h2><span class="header-section-number">2.3</span> S52 Catch</h2>
+<pre class="r"><code>sel &lt;- c(&#39;year&#39;,&#39;month&#39;,&#39;nafo&#39;,&#39;gear.cat&#39;,&#39;source&#39;,&#39;catch&#39;,&#39;country&#39;,&#39;prov&#39;)
+
+lfR &lt;- paste0(dir.rdat, &quot;lf.Rdata&quot;)
+
+    lf &lt;- get.lf(species=&#39;maquereau&#39;,user=imlp.user,password=imlp.pass)
+    
+    # length: m to mm, consistent 5mm bins
+    lf$length &lt;-roundFish(lf$length*1000,5) # idem to carbio before
+    
+    # temporary correction for 2022: will be cleaned in the future!!!
+    #lf[lf$sample.id==70450,&#39;date&#39;] &lt;- as.Date(&quot;2022-09-02&quot;)
+    #lf[lf$sample.id %in% c(69829,69830,69931),&#39;sample.id&#39;] &lt;- 69829
+    #lf[lf$sample.id %in% 70231,&#39;source&#39;] &lt;- 91
+    
+    save(lf, file = lfR)
+
+load(lfR)# weight landed for S52 license samples
+sam &lt;- lf[lf$year&gt;=2022,]
+sam &lt;-  sam %&gt;%  filter(source==91 | (source==99 &amp; sample.id %in% c(73833:73838,73840))) %&gt;% 
+    dplyr::select(&#39;year&#39;,&#39;sample.id&#39;,&#39;month&#39;,&#39;wcatch&#39;,&#39;date&#39;,&#39;nafo&#39;,&#39;nbpc&#39;,&#39;source&#39;,&#39;gear&#39;,&#39;prov&#39;) %&gt;%  distinct()
+
+sam[is.na(sam$wcatch),&#39;wcatch&#39;] &lt;- 300 # temporary 
+nrow(sam)                               
+## [1] 231
+
+catch.sam &lt;- ddply(sam,c(&#39;year&#39;,&#39;month&#39;,&#39;nafo&#39;,&#39;gear&#39;,&#39;prov&#39;),summarise,catch=sum(wcatch/1000))
+
+catch.sam$source &lt;- &#39;S52&#39;
+names(catch.sam)[which(names(catch.sam)==&#39;gear&#39;)] &lt;-&#39;gear.cat&#39;
+
+pc&lt;- catch.sam %&gt;%  ggplot(aes(x=month, y=catch, fill=prov)) +geom_bar(stat=&quot;identity&quot;) +facet_wrap(~year) +
+    scale_fill_viridis_d(name=&quot;&quot;) 
+pc + labs(x=&quot;Mois | Month&quot;, y=&quot;Captures | Catch (t)&quot;)</code></pre>
+<p><img src="1.0_read_files/figure-html/CATCHs52-1.png" width="864" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>
+kable(catch.sam  %&gt;%  group_by(year) %&gt;%  summarize(catchs52=sum(catch, na.rm=T)))</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="right">year</th>
+<th align="right">catchs52</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">2022</td>
+<td align="right">19.325</td>
+</tr>
+<tr class="even">
+<td align="right">2023</td>
+<td align="right">22.753</td>
+</tr>
+<tr class="odd">
+<td align="right">2024</td>
+<td align="right">15.070</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>
+catch.s52&lt;- catch.sam %&gt;%  mutate(country=&quot;Canada&quot;, nafo.sub=nafo) %&gt;%  dplyr::select(all_of(sel))
+
+write.csv(catch.s52, paste0(&quot;../../csv/&quot;,max(my.year), &quot;/S52_catch.csv&quot;), row.names=F)
+</code></pre>
+</div>
+<div id="catch-nafob-ziff-s52" class="section level2" number="2.4">
+<h2><span class="header-section-number">2.4</span> CATCH = NAFOB + ZIFF
++ S52</h2>
 <pre class="r"><code>## bind both
 ziff$source &lt;-&#39;ziff&#39;
 ziff$catch &lt;- ziff$catch/1000            # kg to tonnes
@@ -1395,11 +1462,54 @@ names(ziff)[which(names(ziff) ==&#39;gear_cat&#39;)] &lt;- &#39;gear.cat&#39;
 
 nafoB$source &lt;- &#39;nafo&#39;                   # work with detailed B base
 
-sel &lt;- c(&#39;year&#39;,&#39;month&#39;,&#39;nafo&#39;,&#39;gear.cat&#39;,&#39;source&#39;,&#39;catch&#39;,&#39;country&#39;,&#39;prov&#39;)
-catch &lt;- rbind(ziff[ziff$year&gt;=1995,sel],        # ziff from 1995 onwards
-               nafoB[nafoB$year&lt;1995,sel],       # nafoB before
-               nafoB[nafoB$year&gt;=1995 &amp; nafoB$country!=&#39;Canada&#39;,sel]) # foreign post 1994
 
+
+
+gulf24 &lt;-  read_excel(paste0(dir.dat, &quot;GLF2024_093_Mackerel Logbooks_2024.xlsx&quot;), sheet=2)
+gulf24 &lt;- gulf24 %&gt;%  dplyr::rename(year=`Landed Year`) %&gt;%  mutate(catch= if_else(`Unit of Measure` == &quot;GR&quot;, `Estimate Landing` /1000/1000,
+                                                                 if_else(`Unit of Measure` == &quot;KGS&quot;, `Estimate Landing` /1000,
+                                                                         if_else(`Unit of Measure` == &quot;LBS&quot;, `Estimate Landing` /2.205 /1000, NA))),
+                                                   nafo=substring(`Det Unit Digits`,1,2),
+                                                   source=&quot;pers.comm.&quot;,
+                                                   prov=&quot;NB&quot;,
+                                                   country=&quot;Canada&quot;,
+                                        `Gear Code`= as.numeric(if_else(`Gear Entered` %in% c(&quot;FILET MAILLANT, DÉRIVANT&quot;), 42,
+                                                             if_else(`Gear Entered` %in% c(&quot;FILET MAILLANT, FIXE&quot;), 41,
+                                                                     if_else(`Gear Entered` %in% c(&quot;LIGNE À MAIN&quot;), 59, 
+                                                                             if_else(`Gear Entered` %in% c(&quot;41&quot;), 41, `Gear Code`)))))  ,
+                                        month=lubridate::month(`Date Landed`)
+                                        ) %&gt;%  dplyr::rename(engin=`Gear Code`) 
+gulf24 %&gt;%  group_by(`Gear Entered`, engin)  %&gt;%  tally()
+## # A tibble: 8 × 3
+## # Groups:   Gear Entered [8]
+##   `Gear Entered`           engin     n
+##   &lt;chr&gt;                    &lt;dbl&gt; &lt;int&gt;
+## 1 41                          41     1
+## 2 FILET MAILLANT, DÉRIVANT    42     1
+## 3 FILET MAILLANT, FIXE        41    44
+## 4 GILL NET, FIXED             41   983
+## 5 HAND-LINE                   59   709
+## 6 LIGNE À MAIN                59    62
+## 7 MECHANICAL DEVICE           56    43
+## 8 &lt;NA&gt;                        NA   121
+ ziff_gear &lt;- read.csv(paste0(dir.dat,&quot;/ziff_meta/ziff_gear.csv&quot;), encoding=&quot;latin1&quot;) 
+
+ 
+gulfok&lt;-  left_join(gulf24, ziff_gear) %&gt;%  dplyr::select(all_of(sel))
+
+saveRDS(gulfok, paste0(dir.rdat,&quot;GULF_2024.RDS&quot;))
+
+ziff&lt;- ziff %&gt;% mutate(flag = if_else(npbc %in% c(&quot;000000&quot;,&quot;B00000&quot;,&quot;190000&quot;) | as.numeric(as.character(npbc)) &gt; 190000, 1,0)) 
+## Warning: There was 1 warning in `mutate()`.
+## ℹ In argument: `flag = if_else(...)`.
+## Caused by warning in `is_logical()`:
+## ! NAs introduits lors de la conversion automatique
+
+catch &lt;- bind_rows(ziff[ziff$year&gt;=1995,c(sel,&quot;nafo.sub&quot;,&quot;flag&quot;)],        # ziff from 1995 onwards
+               nafoB[nafoB$year&lt;1995,sel],       # nafoB before
+               nafoB[nafoB$year&gt;=1995 &amp; nafoB$country!=&#39;Canada&#39;,sel], # foreign post 1994
+                gulfok,
+               catch.s52) # for data not yet in ziff
 save(catch, file = paste0(dir.rdat, &quot;catch.Rdata&quot;))
 
 plotCatch(catch %&gt;%  mutate(dummy=1),x=&#39;year&#39;,y=&#39;catch&#39;, fill=&quot;dummy&quot;) +theme(legend.position = &quot;none&quot;) +

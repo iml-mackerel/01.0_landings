@@ -12,3 +12,4 @@ run_site.R
 maps_landings.png
 COSEWIC_landingsdata
 .RDataTmp
+passwords.R

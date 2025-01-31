@@ -10,7 +10,7 @@
 
 
 
-<meta name="date" content="2025-01-09" />
+<meta name="date" content="2025-01-30" />
 
 <title>Settings</title>
 
@@ -371,14 +371,14 @@ div.tocify {
 
 
 <h1 class="title toc-ignore">Settings</h1>
-<h4 class="date">2025-01-09</h4>
+<h4 class="date">2025-01-30</h4>
 
 </div>
 
 
 <pre class="r"><code>##### my packages ################################################################################
 ## CRAN
-cran.packages &lt;- c(&#39;ggplot2&#39;,&#39;gridExtra&#39;,&#39;viridis&#39;,&#39;plyr&#39;,&#39;reshape2&#39;,&#39;lubridate&#39;,&quot;data.table&quot;,&quot;dplyr&quot;)
+cran.packages &lt;- c(&#39;ggplot2&#39;,&#39;gridExtra&#39;,&#39;viridis&#39;,&#39;plyr&#39;,&#39;reshape2&#39;,&#39;lubridate&#39;,&quot;data.table&quot;,&quot;dplyr&quot;,&quot;readxl&quot;)
 install.this &lt;- cran.packages[!(cran.packages %in% utils::installed.packages()[,&quot;Package&quot;])]
 if(length(install.this)&gt;1) install.packages(install.this)
 dummy &lt;- lapply(cran.packages, require, character.only = TRUE)
@@ -392,13 +392,15 @@ if(&#39;CCAM&#39; %in% install.this)  devtools::install_github(&quot;elisvb/CCAM
 dummy &lt;- lapply(git.packages, require, character.only = TRUE)
 
 
-source(&quot;../../R/2024/read.ziff.R&quot;)
+
 
 ##### my directories ################################################################################
-dir.ziff &lt;- &#39;W:/Ziff/Format CSV/ZIF_versiontotale_annuel&#39;# dir to store csv ziff
+dir.ziff &lt;- &#39;data/ziff&#39;# dir to store csv ziff
 dir.nafo &lt;- &#39;../../data/nafo/&#39;# dir to store NAFO data downloaded online
 dir.rdat &lt;- &#39;../../Rdata/&#39;    # dir to store Rdata files 
 dir.dat  &lt;- &#39;../../data/&#39;
+
+source(&quot;../../passwords.R&quot;)
 
 ##### my stock #####################################################################################
 my.species &lt;- &#39;mackerel&#39;                # no capitals

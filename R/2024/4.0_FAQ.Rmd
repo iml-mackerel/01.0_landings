@@ -92,7 +92,7 @@ lookup <- data.frame(gear.group=c('Gillnet','Driftnet','Handline','Jigger'),
 ziffsub <- merge(ziff[ziff$gear.group %in% lookup$gear.group & ziff$nafo=='4T' & !is.na(ziff$gear.group) & !is.na(ziff$nafo),],lookup,all.x=TRUE)
 ziffsub$doy <- yday(ziffsub$land.date)
 
-df.hooknet <- ddply(ziffsub,c('hooknet','doy'),summarise,catch=sum(catch,na.rm=T))
+df.hooknet <- ddply(ziffsub,c('hooknet','doy'),plyr::summarise,catch=sum(catch,na.rm=T))
 ggplot(df.hooknet,aes(x=doy,y=catch,fill=hooknet))+
     geom_rect(aes(xmin=136,xmax=206,ymin=-Inf,ymax=Inf),fill='darkgrey',alpha=0.5)+ # dates from resdoc egg survey Lehoux
     geom_bar(stat='identity')+
@@ -102,7 +102,7 @@ ggplot(df.hooknet,aes(x=doy,y=catch,fill=hooknet))+
 ```
 
 ```{r switch to hooks annual, fig.width=18,fig.height=14, render=F}
-df.hooknety <- ddply(ziffsub,c('year','hooknet','doy'),summarise,catch=sum(catch,na.rm=T))
+df.hooknety <- ddply(ziffsub,c('year','hooknet','doy'),plyr::summarise,catch=sum(catch,na.rm=T))
 spawning_info <- read_excel("C:/Users/VANBE/Desktop/post-doc/DATA/mack_eggs_biochem/data/spawning_info.xlsx")
 
 ggplot(df.hooknety,aes(x=doy,y=catch,fill=hooknet))+

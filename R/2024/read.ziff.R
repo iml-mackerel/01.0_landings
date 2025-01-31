@@ -1,5 +1,8 @@
 read.ziff<- function (sp, path, year = NULL, language = "en") 
 {
+  owd<- getwd()
+
+  setwd(rprojroot::find_rstudio_root_file())
     
     # load all raw data
     raw  <- list.files('data/ziff_meta' , pattern = 'csv', full.names = T)
@@ -14,10 +17,10 @@ read.ziff<- function (sp, path, year = NULL, language = "en")
     ziff_species <- ziff_species[,c(1:4)]
  
     
-    ziff_gear <- read.csv("data/ziff_meta/ziff_gear.csv")
-    ziff_species <- read.csv("data/ziff_meta/ziff_species.csv")
+    ziff_gear <- read.csv("data/ziff_meta/ziff_gear.csv", encoding="latin1")
+    ziff_species <- read.csv("data/ziff_meta/ziff_species.csv", encoding="latin1")[,-5]
     ziff_tonnage <- read.csv("data/ziff_meta/ziff_tonnage.csv")
-    ziff_meta_csv <- read.csv("data/ziff_meta/ziff_meta_csv.csv")
+    ziff_meta_csv <- read.csv("data/ziff_meta/ziff_meta_csv.csv", encoding="latin1")
     
     language <- match.arg(language, choices = c("en", "fr"))
     files <- list.files(pattern = "version_totale_", full.names = TRUE, 
@@ -42,7 +45,7 @@ read.ziff<- function (sp, path, year = NULL, language = "en")
     ziff <- rbindlist(ziff, fill = TRUE)
     ziff <- as.data.frame(ziff)
     #ziffbackup=ziff#dev purpose
-    ziff=ziffbackup
+    #ziff=ziffbackup
     
     ziff[ziff$opano %in% c("", "XXX"), "opano"] <- NA
     ziff[ziff$div %in% c("", "XXX"), "div"] <- NA
@@ -114,5 +117,10 @@ read.ziff<- function (sp, path, year = NULL, language = "en")
     names(temp) <- c(val, paste0(val, "_desc"))
     ziff <- merge(ziff, temp, by = val, all.x = T)
     rm(temp)
+    
+    setwd(owd)
     return(ziff)
+    
+    
+    
 }

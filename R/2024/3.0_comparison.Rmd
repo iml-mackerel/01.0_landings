@@ -39,7 +39,7 @@ names(ct.hist) <- ys
 ## Binding
 
 ```{r wrangle, message = F}
-catch.new <- ddply(catch,c('year'),summarise,catch=sum(catch,na.rm = T),source='New')
+catch.new <- ddply(catch,c('year'),plyr::summarise,catch=sum(catch,na.rm = T),source='New')
 
 ctm <- ldply(names(ct.hist), function(x) data.frame(year=as.numeric(row.names(ct.hist[[x]])),catch=ct.hist[[x]][,1],source=x))
 

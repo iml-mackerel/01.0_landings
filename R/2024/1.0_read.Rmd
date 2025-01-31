@@ -21,6 +21,7 @@ options(width = 200)
 
 ```{r settings, message = F}
 source('0.0_settings.R')
+source("read.ziff.R")
 ```
 
 # Landings
@@ -40,7 +41,7 @@ if(!file.exists(ziffR)){
     
     # Species included:
     with(ziff, table(species,year))
-    ziff <- ziff[ziff$species==250,]   # code 960: few heads in 1996  code 951: wrong whelk
+    ziff <- ziff[ziff$species %in% c(250),]   # code 960: few heads in 1996  code 951: wrong whelk (clams main target..)
 names(ziff)[19] <-  "nafo.sub"
 names(ziff)[20] <-  "nafo"
     save(ziff, file = ziffR)
@@ -64,7 +65,7 @@ kable(with(ziff, table(nafo,month)),caption = 'Number of records per month and N
 #### NA weights
 How many NA weights are there?
 ```{r ziff nas}
-na <- ddply(ziff,c('year'),summarise,
+na <- ddply(ziff,c('year'),plyr::summarise,
             nacatch=length(catch[is.na(catch)]),
             nacatchland=length(catch[is.na(catch)&is.na(catch.landed)]),
             nacatchlandvalue=length(catch[is.na(catch)&is.na(catch.landed)&is.na(catch.value)]))
@@ -103,7 +104,7 @@ There are rows that are 100% identical (same vessel, catch and landing date, tri
 ```{r ZIFF_dups}
 # Duplicates
 dup <- data.frame(year=ziff$year,catch=ziff$catch,dup=duplicated(ziff))
-dupd <- ddply(dup,c('year','dup'),summarise,catch=sum(catch,na.rm=TRUE))
+dupd <- ddply(dup,c('year','dup'),plyr::summarise,catch=sum(catch,na.rm=TRUE))
 ziff <- ziff[!dup$dup,]
 ggplot(dupd,aes(x=year,y=catch/1000,fill=dup))+
     geom_bar(stat='identity',position='stack')+
@@ -175,7 +176,53 @@ ggplot()+
     scale_x_continuous(expand=c(0,0))+ scale_y_continuous(expand=c(0,0))
 ```
 
-## CATCH = NAFOB + ZIFF
+## S52 Catch
+```{r CATCHs52, message = F}
+sel <- c('year','month','nafo','gear.cat','source','catch','country','prov')
+
+lfR <- paste0(dir.rdat, "lf.Rdata")
+
+    lf <- get.lf(species='maquereau',user=imlp.user,password=imlp.pass)
+    
+    # length: m to mm, consistent 5mm bins
+    lf$length <-roundFish(lf$length*1000,5) # idem to carbio before
+    
+    # temporary correction for 2022: will be cleaned in the future!!!
+    #lf[lf$sample.id==70450,'date'] <- as.Date("2022-09-02")
+    #lf[lf$sample.id %in% c(69829,69830,69931),'sample.id'] <- 69829
+    #lf[lf$sample.id %in% 70231,'source'] <- 91
+    
+    save(lf, file = lfR)
+
+load(lfR)# weight landed for S52 license samples
+sam <- lf[lf$year>=2022,]
+sam <-  sam %>%  filter(source==91 | (source==99 & sample.id %in% c(73833:73838,73840))) %>% 
+    dplyr::select('year','sample.id','month','wcatch','date','nafo','nbpc','source','gear','prov') %>%  distinct()
+
+sam[is.na(sam$wcatch),'wcatch'] <- 300 # temporary 
+nrow(sam)                               
+
+catch.sam <- ddply(sam,c('year','month','nafo','gear','prov'),summarise,catch=sum(wcatch/1000))
+
+catch.sam$source <- 'S52'
+names(catch.sam)[which(names(catch.sam)=='gear')] <-'gear.cat'
+
+pc<- catch.sam %>%  ggplot(aes(x=month, y=catch, fill=prov)) +geom_bar(stat="identity") +facet_wrap(~year) +
+    scale_fill_viridis_d(name="") 
+pc + labs(x="Mois | Month", y="Captures | Catch (t)")
+
+kable(catch.sam  %>%  group_by(year) %>%  summarize(catchs52=sum(catch, na.rm=T)))
+
+catch.s52<- catch.sam %>%  mutate(country="Canada", nafo.sub=nafo) %>%  dplyr::select(all_of(sel))
+
+write.csv(catch.s52, paste0("../../csv/",max(my.year), "/S52_catch.csv"), row.names=F)
+
+
+```
+
+
+
+## CATCH = NAFOB + ZIFF + S52
 
 ```{r CATCH, message = F}
 ## bind both
@@ -187,11 +234,38 @@ names(ziff)[which(names(ziff) =='gear_cat')] <- 'gear.cat'
 
 nafoB$source <- 'nafo'                   # work with detailed B base
 
-sel <- c('year','month','nafo','gear.cat','source','catch','country','prov')
-catch <- rbind(ziff[ziff$year>=1995,sel],        # ziff from 1995 onwards
-               nafoB[nafoB$year<1995,sel],       # nafoB before
-               nafoB[nafoB$year>=1995 & nafoB$country!='Canada',sel]) # foreign post 1994
 
+
+
+gulf24 <-  read_excel(paste0(dir.dat, "GLF2024_093_Mackerel Logbooks_2024.xlsx"), sheet=2)
+gulf24 <- gulf24 %>%  dplyr::rename(year=`Landed Year`) %>%  mutate(catch= if_else(`Unit of Measure` == "GR", `Estimate Landing` /1000/1000,
+                                                                 if_else(`Unit of Measure` == "KGS", `Estimate Landing` /1000,
+                                                                         if_else(`Unit of Measure` == "LBS", `Estimate Landing` /2.205 /1000, NA))),
+                                                   nafo=substring(`Det Unit Digits`,1,2),
+                                                   source="pers.comm.",
+                                                   prov="NB",
+                                                   country="Canada",
+                                        `Gear Code`= as.numeric(if_else(`Gear Entered` %in% c("FILET MAILLANT, DÉRIVANT"), 42,
+                                                             if_else(`Gear Entered` %in% c("FILET MAILLANT, FIXE"), 41,
+                                                                     if_else(`Gear Entered` %in% c("LIGNE À MAIN"), 59, 
+                                                                             if_else(`Gear Entered` %in% c("41"), 41, `Gear Code`)))))  ,
+                                        month=lubridate::month(`Date Landed`)
+                                        ) %>%  dplyr::rename(engin=`Gear Code`) 
+gulf24 %>%  group_by(`Gear Entered`, engin)  %>%  tally()
+ ziff_gear <- read.csv(paste0(dir.dat,"/ziff_meta/ziff_gear.csv"), encoding="latin1") 
+
+ 
+gulfok<-  left_join(gulf24, ziff_gear) %>%  dplyr::select(all_of(sel))
+
+saveRDS(gulfok, paste0(dir.rdat,"GULF_2024.RDS"))
+
+ziff<- ziff %>% mutate(flag = if_else(npbc %in% c("000000","B00000","190000") | as.numeric(as.character(npbc)) > 190000, 1,0)) 
+
+catch <- bind_rows(ziff[ziff$year>=1995,c(sel,"nafo.sub","flag")],        # ziff from 1995 onwards
+               nafoB[nafoB$year<1995,sel],       # nafoB before
+               nafoB[nafoB$year>=1995 & nafoB$country!='Canada',sel], # foreign post 1994
+                gulfok,
+               catch.s52) # for data not yet in ziff
 save(catch, file = paste0(dir.rdat, "catch.Rdata"))
 
 plotCatch(catch %>%  mutate(dummy=1),x='year',y='catch', fill="dummy") +theme(legend.position = "none") +

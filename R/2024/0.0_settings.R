@@ -1,6 +1,6 @@
 ##### my packages ################################################################################
 ## CRAN
-cran.packages <- c('ggplot2','gridExtra','viridis','plyr','reshape2','lubridate',"data.table","dplyr")
+cran.packages <- c('ggplot2','gridExtra','viridis','plyr','reshape2','lubridate',"data.table","dplyr","readxl")
 install.this <- cran.packages[!(cran.packages %in% utils::installed.packages()[,"Package"])]
 if(length(install.this)>1) install.packages(install.this)
 dummy <- lapply(cran.packages, require, character.only = TRUE)
@@ -14,13 +14,15 @@ if('CCAM' %in% install.this)  devtools::install_github("elisvb/CCAM")
 dummy <- lapply(git.packages, require, character.only = TRUE)
 
 
-source("../../R/2024/read.ziff.R")
+
 
 ##### my directories ################################################################################
-dir.ziff <- 'W:/Ziff/Format CSV/ZIF_versiontotale_annuel'# dir to store csv ziff
+dir.ziff <- 'data/ziff'# dir to store csv ziff
 dir.nafo <- '../../data/nafo/'# dir to store NAFO data downloaded online
 dir.rdat <- '../../Rdata/'    # dir to store Rdata files 
 dir.dat  <- '../../data/'
+
+source("../../passwords.R")
 
 ##### my stock #####################################################################################
 my.species <- 'mackerel'                # no capitals
