@@ -259,12 +259,22 @@ gulfok<-  left_join(gulf24, ziff_gear) %>%  dplyr::select(all_of(sel))
 
 saveRDS(gulfok, paste0(dir.rdat,"GULF_2024.RDS"))
 
+
+sel <- c('year','month','nafo','gear.cat','source','catch','country','prov')
+
+qc = data.frame(year=2024, month=5:8, nafo=NA, gear.cat=NA, source="Bait", catch=c(458,12101,277,24279), country="Canada", prov="QC")
+
+nl = data.frame(year=2024, month=5:8, nafo=NA, gear.cat=NA, source="Bait", catch=c(0,2621,1134,19454), country="Canada", prov="NL")
+
+
 ziff<- ziff %>% mutate(flag = if_else(npbc %in% c("000000","B00000","190000") | as.numeric(as.character(npbc)) > 190000, 1,0)) 
 
 catch <- bind_rows(ziff[ziff$year>=1995,c(sel,"nafo.sub","flag")],        # ziff from 1995 onwards
                nafoB[nafoB$year<1995,sel],       # nafoB before
                nafoB[nafoB$year>=1995 & nafoB$country!='Canada',sel], # foreign post 1994
                 gulfok,
+               qc %>%  mutate(catch=catch/1000),
+               nl%>%  mutate(catch=catch/1000),
                catch.s52) # for data not yet in ziff
 save(catch, file = paste0(dir.rdat, "catch.Rdata"))
 

@@ -10,7 +10,7 @@
 
 
 
-<meta name="date" content="2025-01-30" />
+<meta name="date" content="2025-02-03" />
 
 <title>Read</title>
 
@@ -371,7 +371,7 @@ div.tocify {
 
 
 <h1 class="title toc-ignore">Read</h1>
-<h4 class="date">2025-01-30</h4>
+<h4 class="date">2025-02-03</h4>
 
 </div>
 
@@ -1499,6 +1499,14 @@ gulfok&lt;-  left_join(gulf24, ziff_gear) %&gt;%  dplyr::select(all_of(sel))
 
 saveRDS(gulfok, paste0(dir.rdat,&quot;GULF_2024.RDS&quot;))
 
+
+sel &lt;- c(&#39;year&#39;,&#39;month&#39;,&#39;nafo&#39;,&#39;gear.cat&#39;,&#39;source&#39;,&#39;catch&#39;,&#39;country&#39;,&#39;prov&#39;)
+
+qc = data.frame(year=2024, month=5:8, nafo=NA, gear.cat=NA, source=&quot;Bait&quot;, catch=c(458,12101,277,24279), country=&quot;Canada&quot;, prov=&quot;QC&quot;)
+
+nl = data.frame(year=2024, month=5:8, nafo=NA, gear.cat=NA, source=&quot;Bait&quot;, catch=c(0,2621,1134,19454), country=&quot;Canada&quot;, prov=&quot;NL&quot;)
+
+
 ziff&lt;- ziff %&gt;% mutate(flag = if_else(npbc %in% c(&quot;000000&quot;,&quot;B00000&quot;,&quot;190000&quot;) | as.numeric(as.character(npbc)) &gt; 190000, 1,0)) 
 ## Warning: There was 1 warning in `mutate()`.
 ## ℹ In argument: `flag = if_else(...)`.
@@ -1509,6 +1517,8 @@ catch &lt;- bind_rows(ziff[ziff$year&gt;=1995,c(sel,&quot;nafo.sub&quot;,&quot;f
                nafoB[nafoB$year&lt;1995,sel],       # nafoB before
                nafoB[nafoB$year&gt;=1995 &amp; nafoB$country!=&#39;Canada&#39;,sel], # foreign post 1994
                 gulfok,
+               qc %&gt;%  mutate(catch=catch/1000),
+               nl%&gt;%  mutate(catch=catch/1000),
                catch.s52) # for data not yet in ziff
 save(catch, file = paste0(dir.rdat, &quot;catch.Rdata&quot;))
 
