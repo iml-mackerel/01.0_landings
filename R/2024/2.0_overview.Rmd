@@ -35,15 +35,15 @@ nafo.groups <- read.csv(paste0(dir.dat,'group_nafo_pretty.csv'), encoding="latin
 region.groups <- read.csv(paste0(dir.dat,'group_region_pretty.csv'), encoding="latin1") 
 region.plus = data.frame(region=c("Q","G","N", "S", "G", "", "", "", "S","Q","N"), prov=c("QC", "PEI", "NL", "NS","NB", "Unknown", NA, "Maritimes & Quebec", "Maritimes",
                                          "Quebec","Newfoundland"))
-region.groups<- full_join(region.groups, region.plus)
-names(region.groups)[which(names(region.groups) =='gear_cat')] <- 'gear.cat'
+region.groups2<- full_join(region.groups, region.plus)
+names(region.groups2)[which(names(region.groups2) =='gear_cat')] <- 'gear.cat'
 
 
 TAC <- read.csv2(paste0(dir.dat,'TAC.csv'))
 
 catch <- left_join(catch, gear.groups)
 catch <- left_join(catch, nafo.groups)
-catch <- left_join(catch, region.groups %>%  filter(region!="L")%>%  dplyr::select(-region))
+catch <- left_join(catch, region.groups2 %>%  filter(region!="L")%>%  dplyr::select(-region))
 ziff <- merge(ziff, region.groups,  all.x = T)
 names(gear.groups)[1] <- 'gear_cat'
 ziff <- merge(ziff,gear.groups[,c(1,3)],all.x = T)
@@ -69,6 +69,12 @@ df.tot[df.tot$country!='Canada','country'] <- 'Foreign'
 df.tot <- ddply(df.tot,c('year','country'),plyr::summarise,catch=sum(catch,na.rm=T))
 df.tot <- reshape2::dcast(df.tot,year~country,value.var = 'catch',fill = 0)
 df.tot$total <- with(df.tot,Canada+Foreign)
+if(max(my.year)==2024) df.tot[which(df.tot$year==2024), "total"] <-  df.tot[which(df.tot$year==2024), "total"] + 63
+#doesn not afft catch at age. because I have no info on when and where and how
+
+#for 2024 missing Gulf 100t for the bait, no info in ziff and file provide by gSL. Info provided by manager,
+#NB +PEI = 277 t. but my file only accounted for 214.
+
 
 write.csv(df.tot,paste0(wd.csv,'total.csv'),row.names = FALSE)
 
@@ -126,6 +132,13 @@ df.dforeg <- ddply(ziff,c('year','region.en'),plyr::summarise,catch=sum(catch,na
 df.dforeg <- reshape2::dcast(df.dforeg,year~region.en,value.var = 'catch',fill = 0)
 
 write.csv(df.dforeg,paste0(wd.csv,'bydforeg.csv'),row.names = FALSE)                                                           
+
+df.dforeg2 <- ddply(catch,c('year','region.en'),plyr::summarise,catch=sum(catch,na.rm=T))
+df.dforeg2 <- reshape2::dcast(df.dforeg2,year~region.en,value.var = 'catch',fill = 0)
+
+if(max(my.year)==2024) df.dforeg2[which(df.dforeg2$year==2024), "Unkown"] <-   df.dforeg2[which(df.dforeg2$year==2024), "Unkown"] + 63
+
+write.csv(df.dforeg2,paste0(wd.csv,'bydforeg2.csv'),row.names = FALSE)                                      
 
 kable(df.dforeg,digits=0,row.names = FALSE, caption='Annual landings (t) by DFO region')
 ```
@@ -288,19 +301,49 @@ pen
 ```
 
 ## Gear x DFOregion
-```{r table gear.reg3}
+```{r table gear.reg3, fig.width=6}
 
 y <- max(my.year-2): max(my.year)                                                               #(3 last years)
 df.gearregion <- catch[catch$year %in% y,]
 df.gearregion <- ddply(df.gearregion,c('year','gear.group','region.en'),plyr::summarise,catch=sum(catch,na.rm=T))
 
+if(max(my.year)==2024) df.gearregion = bind_rows(df.gearregion, data.frame(year=2024, gear.group=NA, region.en = NA, catch=63))
+
+df.gearregion %>%  group_by(year) %>% dplyr::summarize(sum(catch))
 
 ggplot(df.gearregion,aes(x=region.en,y=catch,fill=gear.group))+
     geom_bar(stat="identity")+
     facet_grid(year~.,scale="free_y")+
     scale_y_continuous(expand=c(0,0))+
     labs(x='Region',y='Landings (t)',fill='Gear')+
-    scale_fill_viridis_d(na.value='grey')
+    scale_fill_viridis_d(na.value='grey')+theme(legend.position="bottom")
 
 ```
 
+## Trips
+```{r trip gear.reg3}
+
+y <- max(my.year-2): max(my.year)                                                               #(3 last years)
+trip<- catch %>%  dplyr::filter(year %in% y & (flag==0| is.na(flag))) %>%  filter(source !="Bait")
+
+
+ziff<- ziff %>% mutate(flag = if_else(npbc %in% c("000000","B00000","190000") | as.numeric(as.character(npbc)) > 190000, 1,0)) 
+
+tripzifft<- ziff %>%  dplyr::filter(year %in% y ,species!=species.maintarg, (flag==0| is.na(flag)))
+tripziffm<- ziff %>%  dplyr::filter(year %in% y ,species==species.maintarg, (flag==0| is.na(flag)))
+
+p1<- ggplot(trip %>% dplyr::mutate(region.en=substring(region.en, 1,1)),aes(region.en,y=catch))+
+    geom_boxplot()+
+    scale_fill_viridis_d(na.value='grey') +ggtitle("Total") +facet_wrap(~year, scales="free", drop=F) + labs(x="Region",y="Captures par voyage | Catch by trip") 
+
+p2<- ggplot(tripzifft %>% dplyr::mutate(region.en=substring(region.en, 1,1)),aes(region.en,y=catch/1000))+
+    geom_boxplot()+
+    scale_fill_viridis_d(na.value='grey') +ggtitle("Mackerel not the target") +facet_wrap(~year, scales="free", drop=F) + labs(x="Region",y="Captures par voyage | Catch by trip")
+
+p3<- ggplot(tripziffm %>% dplyr::mutate(region.en=substring(region.en, 1,1)),aes(region.en,y=catch/1000))+
+    geom_boxplot()+
+    scale_fill_viridis_d(na.value='grey') +ggtitle("Mackerel was the target") +facet_wrap(~year, scales="free", drop=F) + labs(x="Region",y="Captures par voyage | Catch by trip")
+library(ggpubr)
+ggarrange(p1, ggarrange(p2, p3, nrow=1, ncol=2), nrow=2, ncol=1)
+
+```

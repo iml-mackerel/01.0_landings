@@ -266,7 +266,6 @@ qc = data.frame(year=2024, month=5:8, nafo=NA, gear.cat=NA, source="Bait", catch
 
 nl = data.frame(year=2024, month=5:8, nafo=NA, gear.cat=NA, source="Bait", catch=c(0,2621,1134,19454), country="Canada", prov="NL")
 
-
 ziff<- ziff %>% mutate(flag = if_else(npbc %in% c("000000","B00000","190000") | as.numeric(as.character(npbc)) > 190000, 1,0)) 
 
 catch <- bind_rows(ziff[ziff$year>=1995,c(sel,"nafo.sub","flag")],        # ziff from 1995 onwards
