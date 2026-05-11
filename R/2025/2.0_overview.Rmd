@@ -1,0 +1,356 @@
+---
+title: "Landings"
+date: "`r Sys.Date()`"
+output:
+    html_document:
+        toc: true
+        toc_depth: 3
+        toc_float:
+            collapsed: FALSE
+        code_folding: show
+        number_sections: TRUE
+---
+    
+    # SET-UP
+```{r markdwon, echo=F}
+library(knitr)
+opts_chunk$set(echo = T, collapse = T, fig.align = "center", fig.width = 9, fig.height = 6)
+options(width = 200)
+```    
+
+## settings
+```{r settings, message = F}
+source('0.0_settings.R')
+```
+
+# Data
+
+## load
+```{r data, message = F}
+load(paste0(dir.rdat, "catch.Rdata"))
+load(paste0(dir.rdat, "ziff.Rdata"))  # <1995 landings not grouped by DFO region (just province)
+
+gear.groups <- read.csv(paste0(dir.dat,'group_gear_pretty.csv'), encoding="latin1") 
+nafo.groups <- read.csv(paste0(dir.dat,'group_nafo_pretty.csv'), encoding="latin1")
+region.groups <- read.csv(paste0(dir.dat,'group_region_pretty.csv'), encoding="latin1") 
+region.plus = data.frame(region=c("Q","G","N", "S", "G", "", "", "", "S","Q","N"), prov=c("QC", "PEI", "NL", "NS","NB", "Unknown", NA, "Maritimes & Quebec", "Maritimes",
+                                         "Quebec","Newfoundland"))
+region.groups2<- full_join(region.groups, region.plus)
+names(region.groups2)[which(names(region.groups2) =='gear_cat')] <- 'gear.cat'
+
+
+TAC <- read.csv2(paste0(dir.dat,'TAC.csv'))
+
+catch <- left_join(catch, gear.groups)
+catch <- left_join(catch, nafo.groups)
+catch <- left_join(catch, region.groups2 %>%  filter(region!="L")%>%  dplyr::select(-region))
+ziff <- merge(ziff, region.groups,  all.x = T)
+names(gear.groups)[1] <- 'gear_cat'
+ziff <- merge(ziff,gear.groups[,c(1,3)],all.x = T)
+```
+
+# Prep for saving
+```{r prp, message = F}
+y <- max(catch$year,na.rm=T)
+
+wd.img <- paste0('../../img/',y,'/')
+wd.csv <- paste0('../../csv/',y,'/')
+
+dir.create(wd.img,recursive = T,showWarnings = F)
+dir.create(wd.csv,recursive = T,showWarnings = F)
+```
+
+# TABLES {.tabset}
+
+## Total
+```{r tabel total}
+df.tot <- catch
+df.tot[df.tot$country!='Canada','country'] <- 'Foreign'
+df.tot <- ddply(df.tot,c('year','country'),plyr::summarise,catch=sum(catch,na.rm=T))
+df.tot <- reshape2::dcast(df.tot,year~country,value.var = 'catch',fill = 0)
+df.tot$total <- with(df.tot,Canada+Foreign)
+#doesn not afft catch at age. because I have no info on when and where and how
+
+write.csv(df.tot,paste0(wd.csv,'total.csv'),row.names = FALSE)
+
+kable(df.tot,digits=0,row.names = FALSE, caption='Annual landings (t) within Canada’s Exclusive Economic Zone')
+```
+
+## Province
+```{r tabel province}
+df.prov <- catch[catch$source=='ziff',]                                            # how did Thomas got provincial from 1985 onwards?
+df.prov <- ddply(df.prov,c('year','prov'),plyr::summarise,catch=sum(catch,na.rm=T))
+df.prov <- reshape2::dcast(df.prov,year~prov,value.var = 'catch',fill = 0)
+
+write.csv(df.prov,paste0(wd.csv,'byprov.csv'),row.names = FALSE)
+
+kable(df.prov,digits=0,row.names = FALSE, caption='Annual landings (t) by province')
+```
+
+## NAFO
+```{r table nafo}
+df.nafo <- ddply(catch,c('year','nafo'),plyr::summarise,catch=sum(catch,na.rm=T))
+df.nafo <- reshape2::dcast(df.nafo,year~nafo,value.var = 'catch',fill = 0)
+
+write.csv(df.nafo,paste0(wd.csv,'bynafo.csv'),row.names = FALSE)                                                            
+
+kable(df.nafo,digits=0,row.names = FALSE, caption='Annual landings (t) by NAFO division')
+```
+
+
+## NAFO 4S
+```{r table nafo 4S, include=F}
+c4s <- catch %>%  mutate(nafo_s = if_else(nafo=="4S" & !is.na(nafo.sub), nafo.sub, nafo))
+
+df.nafos <- ddply(c4s,c('year','nafo_s'),plyr::summarise,catch=sum(catch,na.rm=T))
+df.nafos <- reshape2::dcast(df.nafos,year~nafo_s,value.var = 'catch',fill = 0)
+
+write.csv(df.nafos,paste0(wd.csv,'bynafo_4S.csv'),row.names = FALSE)                                                            
+
+kable(df.nafo,digits=0,row.names = FALSE, caption='Annual landings (t) by NAFO division with details in 4S')
+```
+
+
+## NAFOgroup
+```{r table nafogroup}
+df.nafogroup <- ddply(catch,c('year','nafogroup'),plyr::summarise,catch=sum(catch,na.rm=T))
+df.nafogroup <- reshape2::dcast(df.nafogroup,year~nafogroup,value.var = 'catch',fill = 0)
+
+write.csv(df.nafogroup,paste0(wd.csv,'bynafogroup.csv'),row.names = FALSE)                                                            
+
+kable(df.nafogroup,digits=0,row.names = FALSE, caption='Annual landings (t) by NAFO division (grouped)')
+```
+
+## DFOregion
+```{r table dforeg}
+df.dforeg <- ddply(ziff,c('year','region.en'),plyr::summarise,catch=sum(catch,na.rm=T)/1000)
+df.dforeg <- reshape2::dcast(df.dforeg,year~region.en,value.var = 'catch',fill = 0)
+
+write.csv(df.dforeg,paste0(wd.csv,'bydforeg.csv'),row.names = FALSE)                                                           
+
+df.dforeg2 <- ddply(catch,c('year','region.en'),plyr::summarise,catch=sum(catch,na.rm=T))
+df.dforeg2 <- reshape2::dcast(df.dforeg2,year~region.en,value.var = 'catch',fill = 0)
+
+if(max(my.year)==2024) df.dforeg2[which(df.dforeg2$year==2024), "Unkown"] <-   df.dforeg2[which(df.dforeg2$year==2024), "Unkown"] + 63
+
+df.dforeg2<- df.dforeg2 %>% dplyr::rename(Unknown=Unkown)
+
+write.csv(df.dforeg2,paste0(wd.csv,'bydforeg2.csv'),row.names = FALSE)                                      
+
+kable(df.dforeg,digits=0,row.names = FALSE, caption='Annual landings (t) by DFO region')
+```
+
+## Gear (detailed)
+```{r table gear}
+df.gear <- ddply(catch,c('year','gear'),plyr::summarise,catch=sum(catch,na.rm=T))
+df.gear <- reshape2::dcast(df.gear,year~gear,value.var = 'catch',fill = 0)
+
+write.csv(df.gear,paste0(wd.csv,'bygear.csv'),row.names = FALSE)
+
+kable(df.gear,digits=0,row.names = FALSE, caption='Annual landings (t) by gear type')
+
+```
+
+## Gear (grouped)
+```{r table gear.group}
+df.gear <- ddply(catch,c('year','gear.group'),plyr::summarise,catch=sum(catch,na.rm=T))
+df.gear <- reshape2::dcast(df.gear,year~gear.group,value.var = 'catch',fill = 0)
+
+write.csv(df.gear,paste0(wd.csv,'bygeargroup.csv'),row.names = FALSE)
+
+kable(df.gear,digits=0,row.names = FALSE, caption='Annual landings (t) by gear group')
+
+```
+
+## Target
+```{r table target}
+df.tar <- ddply(ziff,c('year','species.maintarg_en'),plyr::summarise,catch=sum(catch,na.rm=T))
+df.tar <- reshape2::dcast(df.tar,year~species.maintarg_en,value.var = 'catch',fill = 0)
+
+write.csv(df.tar,paste0(wd.csv,'bytar.csv'),row.names = FALSE)
+
+kable(df.tar,digits=0,row.names = FALSE, caption='Annual landings (t) by target species')
+
+```
+
+## Gear x DFOregion
+```{r table gear.reg}
+y <- max(my.year-2): max(my.year)                                                               #(3 last years)
+df.gearregion <- catch[catch$year %in% y,]
+
+
+df.gearregion <- ddply(df.gearregion,c('year','gear.group','region.en'),plyr::summarise,catch=sum(catch,na.rm=T))
+df.gearregion <- reshape2::dcast(df.gearregion,year+region.en~gear.group,value.var = 'catch',fill = 0)
+
+write.csv(df.gearregion,paste0(wd.csv,'bygearRegion_',paste(range(y),collapse = "-"),'.csv'),row.names = FALSE)
+
+kable(df.gearregion,digits=0,row.names = FALSE, caption='Annual landings (kg) by gear type and DFO region')
+```
+
+## Top fisheries
+```{r table top}
+y <- max(my.year-2): max(my.year)  #(3 last years)
+# years to consider (one or multiple)
+df.top <- catch[catch$year %in% y,]
+df.top <- ddply(df.top,c('year','gear','nafo'),plyr::summarise,catch=sum(catch,na.rm=T))
+df.top <- ddply(df.top,c('year'),transform,catch.perc=catch*100/sum(catch,na.rm=T))
+df.top <- ddply(df.top,c('gear','nafo'),plyr::summarise,catch.perc=mean(catch.perc,na.rm=T),catch.mean=mean(catch),catch.tot=sum(catch)) # average percentage
+df.top <- df.top[order(df.top$catch.perc,decreasing = TRUE),]
+df.top$catch.perc <- round(df.top$catch.perc,0)
+
+kable(df.top[df.top$catch.perc>0,],digits=0,row.names = FALSE, caption=paste0('Top fisheries ', max(my.year-2) ,"-", max(my.year)))
+
+```
+
+## Current year
+All regions have data (though preliminary)
+```{r table year}
+y <- max(my.year)           
+y
+df.year <- ziff[ziff$year %in% y & !is.na(ziff$catch),]
+df.year$catch <- df.year$catch/1000
+
+# total landings (t): 56t
+round(sum(df.year$catch,na.rm = T),0)
+
+# top landings (t): 38t landed by two trips, both targetting mackerel in July (maritimes)
+#df.year <- df.year[order(df.year$catch,decreasing = T),]
+#head(df.year[,c('catch','species.maincapt_en','species.maintarg_en','land.date','nafo','gear_en','region.en')],10)
+
+# At least from by-catch (but many NA, so don't know): 
+round(sum(df.year[df.year$species.maintarg_en!='Mackerel' &!is.na(df.year$species.maintarg_en),'catch'],0))
+
+#what by-catch
+bycatch <- ddply(df.year,c('species.maintarg_en'),plyr::summarise,catch=sum(catch))
+bycatch[order(bycatch$catch,decreasing = TRUE),]
+
+# from vessels with experimental license: nothing
+nr <- read.csv(paste0(dir.dat,'npbc_samples',y,'.csv'))
+df.year[df.year$npbc %in% nr[,1], c("land.date", "gear", "prov.land","species_en", "capt.estimated")]
+```
+
+
+# PLOTS {.tabset}
+
+## resdoc
+Figure for resdoc.
+```{r plot all}
+# load censor limits
+                                    
+load(paste0('../../../00.0_model/Rdata/',tail(my.year,1),'/input/dat.Rdata'))
+ct <- as.data.frame(cbind(dat$aux,exp(dat$logobs)))
+ct <- ct[ct$fleet==1,]
+
+# landings because of samples (preliminary for NL)
+df.nafogroup <- ddply(catch,c('year','nafogroup'),plyr::summarise,catch=sum(catch,na.rm=T))
+
+
+p <- ggplot(df.nafogroup,aes(x=year,y=catch/1000))+
+    geom_line(data=ct,aes(x=year,y=aux1/1000),col='darkgrey')+
+    geom_line(data=ct,aes(x=year,y=aux2/1000),col='darkgrey')+
+    geom_bar(stat='identity',aes(fill=nafogroup))+
+    geom_point(data=TAC[TAC$type=='CAN',],aes(x=year,y=TAC/1000),size=1)+
+    scale_y_continuous(expand=c(0,0),limits=c(0,120))+
+    scale_x_continuous(expand=c(0,0))+
+    scale_fill_viridis_d(na.value='grey',direction = -1)
+#return to project wd
+ 
+# plot (English)
+pen <- p+labs(y='Landings (kt)',x='Year',fill='Region')
+ggsave(paste0('../../img/',tail(my.year,1),'/catch.png'),pen,width = 15,height = 8,units = 'cm')
+
+#plot (French)
+pfr <- p+labs(y='Débarquements (kt)',x='Année',fill='Région')
+ggsave(paste0('../../img/',tail(my.year,1),'/catch_FR.png'),pfr,width = 15,height = 8,units = 'cm')
+
+#plot (BI)
+pfr <- p+labs(y='Débarquements | Landings (kt)',x='Année | Year',fill='Région')
+ggsave(paste0('../../img/',tail(my.year,1),'/catch_BI.png'),pfr,width = 15,height = 8,units = 'cm')
+
+
+pen
+
+
+
+```
+
+
+```{r plotrecent all}
+# load censor limits
+                                    
+
+p <- ggplot(df.nafogroup %>%  filter(year > 2013),aes(x=year,y=catch/1000))+
+     geom_bar(stat='identity',aes(fill=nafogroup))+
+    geom_point(data=TAC[TAC$type=='CAN' & TAC$year >2013,],aes(x=year,y=TAC/1000),size=1)+
+    scale_y_continuous(expand=c(0,0))+
+    scale_x_continuous(expand=c(0,0), breaks=seq(2014, max(my.year), 2))+
+    scale_fill_viridis_d(na.value='grey',direction = -1)
+#return to project wd
+ 
+# plot (English)
+pen <- p+labs(y='Landings (kt)',x='Year',fill='Region')
+ggsave(paste0('../../img/',tail(my.year,1),'/catchzoom.png'),pen,width = 15,height = 8,units = 'cm')
+
+#plot (French)
+pfr <- p+labs(y='Débarquements (kt)',x='Année',fill='Région')
+ggsave(paste0('../../img/',tail(my.year,1),'/catchzoom_FR.png'),pfr,width = 15,height = 8,units = 'cm')
+
+pbi <- p+labs(y='Débarquements | Landings (kt)',x='Année | Year',fill='Region')
+ggsave(paste0('../../img/',tail(my.year,1),'/catchzoom_BI.png'),pbi,width = 15,height = 8,units = 'cm')
+
+pen
+```
+
+## Gear x DFOregion
+```{r table gear.reg3, fig.width=6}
+
+y <- max(my.year-2): max(my.year)                                                               #(3 last years)
+df.gearregion <- catch[catch$year %in% y,]
+df.gearregion <- ddply(df.gearregion,c('year','gear.group','region.en'),plyr::summarise,catch=sum(catch,na.rm=T))
+
+if(max(my.year)==2024) df.gearregion = bind_rows(df.gearregion, data.frame(year=2024, gear.group=NA, region.en = NA, catch=63))
+
+df.gearregion %>%  group_by(year) %>% dplyr::summarize(sum(catch))
+
+ggplot(df.gearregion,aes(x=region.en,y=catch,fill=gear.group))+
+    geom_bar(stat="identity")+
+    facet_grid(year~.,scale="free_y")+
+    scale_y_continuous(expand=c(0,0))+
+    labs(x='Region',y='Landings (t)',fill='Gear')+
+    scale_fill_viridis_d(na.value='grey')+theme(legend.position="bottom")
+
+```
+
+## Trips
+```{r trip gear.reg3}
+
+y <- max(my.year-2): max(my.year)                                                               #(3 last years)
+trip<- catch %>%  dplyr::filter(year %in% y & (flag==0| is.na(flag))) %>%  filter(source !="Bait")
+
+
+ziff<- ziff %>% mutate(flag = if_else(npbc %in% c("000000","B00000","190000") | as.numeric(as.character(npbc)) > 190000, 1,0)) 
+
+tripzifft<- ziff %>%  dplyr::filter(year %in% y ,species!=species.maintarg, (flag==0| is.na(flag)))
+tripziffm<- ziff %>%  dplyr::filter(year %in% y ,species==species.maintarg, (flag==0| is.na(flag)))
+
+p1<- ggplot(trip %>% dplyr::mutate(region.en=substring(region.en, 1,1)),aes(region.en,y=catch))+
+    geom_boxplot()+
+    scale_fill_viridis_d(na.value='grey') +ggtitle("Total") +facet_wrap(~year, scales="free", drop=F) + labs(x="Region",y="Captures par voyage | Catch by trip") 
+
+p2<- ggplot(tripzifft %>% dplyr::mutate(region.en=substring(region.en, 1,1)),aes(region.en,y=catch/1000))+
+    geom_boxplot()+
+    scale_fill_viridis_d(na.value='grey') +ggtitle("Mackerel not the target") +facet_wrap(~year, scales="free", drop=F) + labs(x="Region",y="Captures par voyage | Catch by trip")
+
+p3<- ggplot(tripziffm %>% dplyr::mutate(region.en=substring(region.en, 1,1)),aes(region.en,y=catch/1000))+
+    geom_boxplot()+
+    scale_fill_viridis_d(na.value='grey') +ggtitle("Mackerel was the target") +facet_wrap(~year, scales="free", drop=F) + labs(x="Region",y="Captures par voyage | Catch by trip")
+library(ggpubr)
+ggarrange(p1, ggarrange(p2, p3, nrow=1, ncol=2), nrow=2, ncol=1)
+
+```
+
+
+```{r}
+# Stop the render here
+knitr::knit_exit()
+```
